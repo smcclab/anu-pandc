@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+.pytest_cache/
+# scraped output from local runs
+data/
