@@ -6,6 +6,15 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A 403 now explains itself: the error says whether the refusal carried
+  Programs & Courses' own headers (ANU refused it) or none of them (a proxy,
+  firewall or sandbox egress allow-list in between did), and what to do about
+  each. README gains a section on running the tool from sandboxes, CI and
+  agent environments.
+- `ANU_PANDC_USER_AGENT` overrides the default identifying User-Agent.
+
 ## [0.1.0] — 2026-09-17
 
 First tagged release. Split out of the ANU School of Computing curriculum

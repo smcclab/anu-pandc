@@ -51,6 +51,36 @@ self-identifying User-Agent, and a half-second pause before every request. Turn
 that up with `--rate` when reading a lot at once, and please don't turn it down
 to zero against the live site.
 
+## Running it elsewhere (sandboxes, CI, agents)
+
+The tool needs outbound HTTPS to two hosts: `github.com` to install it, and
+`programsandcourses.anu.edu.au` to read anything. Sandboxes with an egress
+allow-list commonly permit the first and refuse the second, which surfaces as a
+403 on the first fetch.
+
+A 403 now says which end refused you. If the response carries P&C's own Azure
+headers, ANU said no; if it carries none of them, something between you and ANU
+did — add `programsandcourses.anu.edu.au` to the allow-list. The site is a plain
+Azure App Service with no bot-detection layer in front of it, and it answers
+`curl`, `python-requests` and browser User-Agents alike, so a blanket 403 is
+almost always the network in between.
+
+To check by hand from the environment in question:
+
+```bash
+curl -sS -D- -o /dev/null https://programsandcourses.anu.edu.au/2026/course/COMP1730
+```
+
+A 200 with `Request-Context` and `ARRAffinity` headers means the path is clear.
+
+`ANU_PANDC_USER_AGENT` overrides the identifying User-Agent if you need to say
+who you are differently; standard `HTTPS_PROXY` / `NO_PROXY` variables are
+honoured, since the tool is built on `requests`.
+
+Everything that reads a saved tree — `offerings --from`, `conveners --from`,
+and the parsers in `anu_pandc.parse` — works with no network at all, so an
+agent that cannot reach ANU can still work from data someone else committed.
+
 ## Quick start
 
 ```bash
