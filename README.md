@@ -1,10 +1,15 @@
 # anu-pandc
 
+[![tests](https://github.com/smcclab/anu-pandc/actions/workflows/test.yml/badge.svg)](https://github.com/smcclab/anu-pandc/actions/workflows/test.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 A command-line interface to [ANU Programs & Courses](https://programsandcourses.anu.edu.au).
 
-> **Unofficial.** This is a personal project. It is not affiliated with,
-> endorsed by, or supported by the Australian National University. It reads the
-> public Programs & Courses website; it holds no data of its own.
+> **Unofficial.** A tool from the [SMC Lab](https://smcclab.github.io) in the
+> ANU School of Computing, for our own curriculum work. It is not an official
+> ANU system and is not endorsed or supported by the Programs & Courses team.
+> It reads the public P&C website and ships no data of its own.
 
 Point it at any program, major/minor/specialisation or course code and a year.
 It prints the page as clean Markdown (or JSON), or saves a whole year of a
@@ -16,23 +21,26 @@ API, and extracts planned offerings for future years before P&C publishes them.
 
 ## Install
 
-With [uv](https://docs.astral.sh/uv/):
+Python 3.11 or newer. Not on PyPI yet, so install from this repository — with
+[uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install anu-pandc
+uv tool install git+https://github.com/smcclab/anu-pandc.git@v0.1.0
 anu-pandc --help
 ```
 
-Or run it without installing:
+Or run it without installing anything, which is the easy way to hand it to a
+script or a coding agent:
 
 ```bash
-uvx anu-pandc get COMP1730 --year 2026
+uvx --from git+https://github.com/smcclab/anu-pandc.git@v0.1.0 anu-pandc get COMP1730 --year 2026
 ```
 
-Or with pip: `pip install anu-pandc`. Python 3.11 or newer.
+Or with pip: `pip install git+https://github.com/smcclab/anu-pandc.git`.
 
-To track the development version instead, install from the repository:
-`uv tool install git+https://gitlab.anu.edu.au/u4110680/anu-pandc.git`.
+Drop the `@v0.1.0` to track `main`. To depend on it from another project, add
+`anu-pandc @ git+https://github.com/smcclab/anu-pandc.git` to your
+`dependencies`.
 
 ## Status
 
@@ -156,15 +164,25 @@ dicts, so they can be run over saved HTML too.
 ## Development
 
 ```bash
-git clone https://gitlab.anu.edu.au/u4110680/anu-pandc.git
+git clone https://github.com/smcclab/anu-pandc.git
 cd anu-pandc
 uv sync
 uv run pytest
 ```
 
 Tests run against saved HTML fixtures in `tests/fixtures/`; no network needed.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to fix a parser when ANU changes
+a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
+
+## Further reading
+
+- [docs/pc-api.md](docs/pc-api.md) — the undocumented JSON endpoints behind the
+  P&C catalogue search, what they return, and the quirks worth knowing (the
+  page size cap, which server-side filters silently do nothing, how far back
+  `SelectedYear` goes).
 
 ## Licence
 
-MIT. Written by Charles Martin for curriculum work in the ANU School of
-Computing; not an official ANU tool.
+MIT — see [LICENSE](LICENSE). Written by Charles Martin for curriculum work in
+the ANU School of Computing. The course data it reads belongs to ANU and is
+published at [Programs & Courses](https://programsandcourses.anu.edu.au).

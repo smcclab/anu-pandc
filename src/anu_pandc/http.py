@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 from anu_pandc import __version__
 
 BASE_URL = "https://programsandcourses.anu.edu.au"
-USER_AGENT = f"anu-pandc/{__version__} (+https://gitlab.anu.edu.au/u4110680/anu-pandc)"
+USER_AGENT = f"anu-pandc/{__version__} (+https://github.com/smcclab/anu-pandc)"
 DEFAULT_TIMEOUT = 30
 
 # Module-level so the CLI can turn it down for tests or up if asked to.

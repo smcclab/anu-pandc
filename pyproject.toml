@@ -32,9 +32,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://gitlab.anu.edu.au/u4110680/anu-pandc"
-Repository = "https://gitlab.anu.edu.au/u4110680/anu-pandc"
-Issues = "https://gitlab.anu.edu.au/u4110680/anu-pandc/-/issues"
+Homepage = "https://github.com/smcclab/anu-pandc"
+Repository = "https://github.com/smcclab/anu-pandc"
+Issues = "https://github.com/smcclab/anu-pandc/issues"
 
 [project.scripts]
 anu-pandc = "anu_pandc.cli:cli"

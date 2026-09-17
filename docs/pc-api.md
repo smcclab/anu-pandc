@@ -39,5 +39,5 @@ curl "https://programsandcourses.anu.edu.au/data/CourseSearch/GetCourses?\
 AppliedFilter=FilterByCourses&SearchText=COMP&PageIndex=0&MaxPageSize=50&SelectedYear=2026"
 ```
 
-`scraper/scrape_catalogue.py` wraps `GetCourses`; the subplan and program
-endpoints are not yet wrapped.
+`anu_pandc.catalogue` wraps `GetCourses` (the `anu-pandc catalogue` command);
+the subplan and program endpoints are not yet wrapped.
