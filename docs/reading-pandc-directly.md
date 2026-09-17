@@ -1,14 +1,27 @@
 # Reading Programs & Courses directly
 
-For an assistant that has a web-fetch tool but cannot run this CLI — a chat
-session, a cloud agent, a sandbox whose egress allow-list refuses
-`programsandcourses.anu.edu.au` to the tool but permits it to the browser
-integration. Everything below is a plain HTTPS GET against the public site.
+**This is a fallback. If you can run `anu-pandc`, stop reading and run it.**
+
+It exists for one situation: an assistant that has a web-fetch or browser tool
+but cannot run this CLI — a chat session, a cloud agent, a sandbox whose egress
+allow-list refuses `programsandcourses.anu.edu.au` to the tool while permitting
+it to the browser integration. Everything below is a plain HTTPS GET against
+the public site.
+
+Hand-fetching is strictly worse than the CLI where the CLI works. You re-derive
+parsers that already exist and get no rate limiting, no saved tree, no
+not-found detection, and no `offerings`/`conveners` aggregation. On a machine
+with a checkout or `uvx`, the CLI is the right answer even for a single lookup:
+
+```bash
+uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1730 --year 2026
+```
+
+So: try the CLI first, and only fall back here once a fetch has actually been
+refused. The other use for this document is as the reference for what the CLI
+is doing under the hood.
 
 The URLs and quirks here were checked against the live site on 2026-09-17.
-
-If you *can* run the CLI, do that instead: it parses these pages for you.
-This document is the fallback, and the reference for what the CLI is doing.
 
 ## 1. The five things you can fetch
 

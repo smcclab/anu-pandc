@@ -89,7 +89,8 @@ agent that cannot reach ANU can still work from data someone else committed.
 If the *tool* is blocked but the agent has a web-fetch or browser tool that is
 not, it can read P&C directly over plain HTTPS:
 [docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) gives it the
-URL shapes and the recipes.
+URL shapes and the recipes. That is a last resort for sandboxes — anywhere the
+CLI runs, use the CLI.
 
 ## Quick start
 
@@ -217,8 +218,9 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
 
 ## Further reading
 
-- [docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) — how to read
-  P&C with nothing but a web-fetch tool: the URL shapes for courses, programs,
+- [docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) — the
+  fallback for sandboxed agents that cannot reach ANU through this tool: how to
+  read P&C with nothing but a web-fetch tool — the URL shapes for courses, programs,
   subplans and class summaries, how to find who is convening something, how to
   tell an error page from a real one, and how to work out which year and
   teaching period a question is actually about. Written for an agent or chat
