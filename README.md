@@ -6,10 +6,11 @@
 
 A command-line interface to [ANU Programs & Courses](https://programsandcourses.anu.edu.au).
 
-> **Unofficial.** A tool from the [SMC Lab](https://smcclab.github.io) in the
-> ANU School of Computing, for our own curriculum work. It is not an official
-> ANU system and is not endorsed or supported by the Programs & Courses team.
-> It reads the public P&C website and ships no data of its own.
+> **Unofficial.** A tool from the [Sound, Music and Creative Computing Lab
+> (SMCC Lab)](https://smcclab.github.io) in the ANU School of Computing, for
+> our own curriculum work. It is not an official ANU system and is not
+> endorsed or supported by the Programs & Courses team. It reads the public
+> P&C website and ships no data of its own.
 
 Point it at any program, major/minor/specialisation or course code and a year.
 It prints the page as clean Markdown (or JSON), or saves a whole year of a

@@ -1,8 +1,9 @@
 # Contributing
 
-This is a small tool maintained by the [SMC Lab](https://smcclab.github.io) for
-our own curriculum work, but bug reports and patches are welcome — especially
-when ANU changes a page and a parser stops working.
+This is a small tool maintained by the [Sound, Music and Creative Computing Lab
+(SMCC Lab)](https://smcclab.github.io) for our own curriculum work, but bug
+reports and patches are welcome — especially when ANU changes a page and a
+parser stops working.
 
 ## Setting up
 
