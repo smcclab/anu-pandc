@@ -220,3 +220,83 @@ def test_may_not_enrol_phrasing_is_incompatibility():
         "MATH1116", "https://example.com",
     )
     assert "MATH1014" in data["incompatibilities"]
+
+
+# --- Requisite splitting: lead-in phrasing must not gate the prerequisite ---
+
+from anu_pandc.parse.courses import _get_requisites
+
+
+def requisites(html: str, *, wrap: bool = True):
+    body = f'<div class="requisite">{html}</div>' if wrap else html
+    page = f"<h2>Requisite and Incompatibility</h2>{body}<h2>Prescribed Texts</h2><p>None</p>"
+    return _get_requisites(BeautifulSoup(page, "html.parser"))
+
+
+def test_requisite_comma_after_course():
+    """COMP4350 2027: 'this course, you must' — the comma used to lose the prereq."""
+    pre, inc, _ = requisites(
+        "To enrol in this course, you must have either: completed 12 units of "
+        "2000-level COMP courses Incompatible with COMP8350 ."
+    )
+    assert pre.startswith("To enrol in this course, you must")
+    assert "12 units of 2000-level COMP courses" in pre
+    assert inc == "Incompatible with COMP8350 ."
+
+
+def test_requisite_no_lead_in_phrase():
+    """COMP4620: the condition stands alone with no 'To enrol...' lead-in."""
+    pre, inc, _ = requisites("12 units of 3000 and/or 4000 level COMP courses.")
+    assert pre == "12 units of 3000 and/or 4000 level COMP courses."
+    assert inc == "None"
+
+
+def test_requisite_short_lead_in():
+    """COMP3770: 'To enrol you must' — no 'in this course'."""
+    pre, _, _ = requisites("To enrol you must: be studying Bachelor of Advanced Computing")
+    assert pre.startswith("To enrol you must")
+
+
+def test_requisite_incompatibility_only():
+    pre, inc, _ = requisites("Incompatible with COMP1130 .")
+    assert pre == "None"
+    assert inc == "Incompatible with COMP1130 ."
+
+
+def test_requisite_unchanged_for_canonical_phrasing():
+    pre, inc, _ = requisites(
+        "To enrol in this course you must have successfully completed COMP1130 . "
+        "You are not able to enrol in this course if you have completed COMP1110 ."
+    )
+    assert pre == "To enrol in this course you must have successfully completed COMP1130 ."
+    assert inc.startswith("You are not able to enrol")
+
+
+def test_requisite_section_without_the_requisite_div():
+    """COMP3710/5920/6470/8820: a bare paragraph, no div.requisite to read."""
+    pre, inc, raw = requisites(
+        "<p>You will need to contact the School of Computing to request a "
+        "permission code to enrol in this course.</p>",
+        wrap=False,
+    )
+    assert "permission code" in pre
+    assert inc == "None"
+    assert raw.startswith("You will need to contact")
+
+
+def test_requisite_section_stops_at_the_next_heading():
+    page = BeautifulSoup(
+        "<h2>Requisite and Incompatibility</h2><div class='requisite'>"
+        "Incompatible with COMP1130 .</div>"
+        "<h2>Prescribed Texts</h2><p>Some textbook nobody assigned.</p>",
+        "html.parser",
+    )
+    pre, inc, raw = _get_requisites(page)
+    assert "textbook" not in raw
+    assert inc == "Incompatible with COMP1130 ."
+    assert pre == "None"
+
+
+def test_requisite_absent_section():
+    page = BeautifulSoup("<h2>Prescribed Texts</h2><p>None</p>", "html.parser")
+    assert _get_requisites(page) == ("None", "None", "")

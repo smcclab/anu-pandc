@@ -40,59 +40,70 @@ def _get_level(code: str) -> str:
     return ""
 
 
-def _get_requisites(soup: BeautifulSoup) -> tuple[str, str, str]:
-    """Return (prerequisites, incompatibilities, requisite_raw) extracted from div.requisite.
+_REQ_HEADING = "requisite and incompatibility"
+_HEADING_TAG = re.compile(r"^h[1-6]$")
 
-    requisite_raw is the complete unprocessed text of the div, preserved so the
-    split heuristics can be audited and improved over time.
+# The section ends at the next heading, which is normally "Prescribed Texts".
+_INCOMPAT_MARKERS = (
+    "You are not able to enrol",
+    "You cannot enrol",
+    "You may not enrol",
+    "Incompatible with",
+)
+
+
+def _requisite_section_text(soup: BeautifulSoup) -> str:
+    """Text of the "Requisite and Incompatibility" section, or "" if absent.
+
+    Walks from that heading to the next one rather than reading div.requisite.
+    Most courses wrap the section in that div, but some — COMP3710, COMP5920,
+    COMP6470, COMP8820 — carry a bare paragraph instead ("You will need to
+    contact the School of Computing to request a permission code"), and reading
+    only the div dropped their entry conditions silently.
     """
+    for heading in soup.find_all(_HEADING_TAG):
+        if not heading.get_text(strip=True).lower().startswith(_REQ_HEADING):
+            continue
+        parts = []
+        for sib in heading.next_siblings:
+            if getattr(sib, "name", None) and _HEADING_TAG.match(sib.name):
+                break
+            text = sib.get_text(" ", strip=True) if hasattr(sib, "get_text") else str(sib).strip()
+            if text:
+                parts.append(text)
+        return " ".join(parts)
+
     div = soup.find("div", class_="requisite")
-    if not div:
+    return div.get_text(" ", strip=True) if div else ""
+
+
+def _get_requisites(soup: BeautifulSoup) -> tuple[str, str, str]:
+    """Return (prerequisites, incompatibilities, requisite_raw).
+
+    requisite_raw is the complete unprocessed section text, preserved so the
+    split heuristic can be audited and improved over time.
+
+    The section holds at most two things — entry conditions, then
+    incompatibilities — so the split keys off the incompatibility markers alone
+    and takes whatever precedes them as the prerequisite. Matching a lead-in
+    phrase instead ("To enrol in this course you must") used to drop real
+    prerequisites whenever P&C worded it differently: the comma in "To enrol in
+    this course, you must", the shorter "To enrol you must", or a bare condition
+    with no lead-in at all ("12 units of 3000 and/or 4000 level COMP courses.").
+    """
+    full_text = " ".join(_requisite_section_text(soup).splitlines()).strip()
+    if not full_text:
         return "None", "None", ""
 
-    full_text = div.get_text(" ", strip=True)
-    full_text = " ".join(full_text.splitlines())
+    starts = [i for i in (full_text.find(m) for m in _INCOMPAT_MARKERS) if i != -1]
+    incompat_start = min(starts) if starts else None
 
-    # Split on the incompatibility marker
-    prereq_text = "None"
-    incompat_text = "None"
-
-    # "To enrol in this course you must" covers all observed variants:
-    #   "...must have completed"
-    #   "...must have successfully completed or be currently studying"
-    #   "...must:" (followed by bullet conditions)
-    prereq_markers = ["To enrol in this course you must"]
-    incompat_markers = [
-        "You are not able to enrol",
-        "You cannot enrol",
-        "You may not enrol",
-        "Incompatible with",
-    ]
-
-    # Find where incompatibilities start in the text
-    incompat_start = None
-    for marker in incompat_markers:
-        idx = full_text.find(marker)
-        if idx != -1:
-            if incompat_start is None or idx < incompat_start:
-                incompat_start = idx
-
-    # Find where prerequisites start
-    prereq_start = None
-    for marker in prereq_markers:
-        idx = full_text.find(marker)
-        if idx != -1:
-            if prereq_start is None or idx < prereq_start:
-                prereq_start = idx
-
-    if prereq_start is not None:
-        end = incompat_start if incompat_start and incompat_start > prereq_start else len(full_text)
-        prereq_text = full_text[prereq_start:end].strip()
-
-    if incompat_start is not None:
-        incompat_text = full_text[incompat_start:].strip()
-
-    return prereq_text, incompat_text, full_text
+    head = (full_text[:incompat_start] if incompat_start is not None else full_text).strip()
+    return (
+        head or "None",
+        full_text[incompat_start:].strip() if incompat_start is not None else "None",
+        full_text,
+    )
 
 
 def _extract_prereq_codes(prereq_text: str) -> list[str]:
