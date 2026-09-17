@@ -1,0 +1,806 @@
+
+<!DOCTYPE html>
+
+<html class="wf-loading">
+<head>
+<script src="https://cdn-au.onetrust.com/consent/0a85b331-d8d7-4979-a97e-aa69b819df86/OtAutoBlock.js" type="text/javascript"></script>
+<!-- Google Tag Manager -->
+<script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-5H3R8L');</script>
+<!-- End Google Tag Manager -->
+<meta content="width=device-width" name="viewport"/>
+<title>Advanced Topics in Formal Methods and Programming Languages     - ANU</title>
+<meta content="IE=10,chrome=1" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width" name="viewport"/>
+<meta content="phone" media="(max-width: 479px)" name="breakpoint"/>
+<meta content="phone-wide" media="(min-width: 480px) and (max-width: 639px)" name="breakpoint"/>
+<meta content="tablet" media="(min-width: 640px) and (max-width: 959px)" name="breakpoint"/>
+<meta content="mobile" media="(max-width: 959px)" name="breakpoint"/>
+<meta content="Advanced Topics in Formal Methods and Programming Languages    " name="course-name"/>
+<meta content="COMP4011" name="course-acronym"/>
+<meta content="COMP4011" name="course-code"/>
+<meta content="2026" name="course-year"/>
+<meta content="&lt;p&gt;This course offers students a unique opportunity for the advanced study of a special thematic area within the discipline of Theoretical Computer Science. The topics will vary from year to year in response to emerging theoretical and practical issues in the discipline, as well as the research interests and expertise&amp;nbsp;of academics and sessional staff.&amp;nbsp;They will be drawn from the broad areas of formal methods and programming languages, and could include (but not limited to) the following topics: computational logic, category theory, concurrency theory, type theory, semantics of programming languages, computer-assisted theorem proving, model checking, formal methods for security, and formal verification of hardware and software systems.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" name="course-description"/>
+<link href="/content/images/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+<link href="https://programsandcourses.anu.edu.au/2026/course/comp4011" rel="canonical"/>
+<link href="/Content/style/css?v=l39PRz-ofbBt1pGXtaW3bFFx4zD8BixKaBQ9axK0Dbw1" rel="stylesheet"/>
+<script src="/Scripts/modernizer?v=l2fp1E6Lih5iAZRql1s00lXjFeESzFAiTh1OjyQwK801"></script>
+<script>
+        Modernizr.load([{
+            test: Modernizr.fontface,
+            yep: '//use.typekit.com/xkv0pni.js',
+            callback: function () {
+                var removeWfLoading = function () {
+                    with (document.documentElement) {
+                        className = className.replace(/\bwf-loading\b/, 'wf-failed');
+                    }
+                };
+                setTimeout(function () {
+                    try { Typekit.load(); } catch (e) { removeWfLoading(); }
+                }, 10);
+                setTimeout(function () {
+                    removeWfLoading();
+                }, 1000);
+            }
+        }]);
+    </script>
+<script>
+        !function (a, b) { "use strict"; var c = { breakpoints: {}, _isTicking: !1, _debounceLastTime: 0, _namedEvents: {}, _eventMatchCache: {}, _globalEvents: [], onBreakpointChange: function () { var a = Array.prototype.slice.call(arguments), b = a.pop(), d = a.pop(); "undefined" == typeof d ? c._globalEvents.push(b) : (c._namedEvents[d] = []).push(b), k() } }, d = function (c) { /in/.test(b.readyState) ? a.setTimeout(function () { d(c) }, 9) : c() }, e = function (a, b) { var c = a.className.split(" "), d = c.indexOf(b); d > -1 && (c.splice(d, 1), a.className = c.join(" ")) }, f = function (a, b) { -1 === a.className.indexOf(b) && (a.className = "" !== a.className ? a.className + " " + b : b) }, g = function (a, c) { var d = "breakpoint-" + c, g = b.documentElement; a ? f(g, d) : e(g, d) }, h = function (a) { c._globalEvents.forEach(function (b) { "function" == typeof b && b(a) }) }, i = function () { c._isTicking || j(k), c._isTicking = !0 }, j = function (b, d) { if (!a.requestAnimationFrame) { var e = (new Date).getTime(), f = Math.max(0, 16 - (e - c._debounceLastTime)), g = a.setTimeout(function () { b(e + f) }, f); return c._debounceLastTime = e + f, g } a.requestAnimationFrame(b, d) }, k = function () { c._isTicking = !1; var b = []; for (var d in c.breakpoints) { var e = c.breakpoints[d], f = a.matchMedia(e).matches; if (c._namedEvents[d] && c._eventMatchCache[d] !== f) { c._eventMatchCache[d] = f; for (var i = 0; i < c._namedEvents[d].length; i++) { var j = c._namedEvents[d][i]; "function" == typeof j && j(f) } } f && b.push(d), g(f, d) } 0 !== b.length && h(b) }, l = function () { for (var a = b.getElementsByTagName("meta"), d = 0; d < a.length; d++)if ("breakpoint" === a[d].name) { var e = a[d].getAttribute("content"), f = a[d].getAttribute("media"); c.breakpoints[e] = f } }, m = function () { l(), k() }, n = function () { l(), k(), a.addEventListener("resize", i) }; "undefined" != typeof module && module.exports ? module.exports = c : a.metaQuery = c, m(), d(n) }(window, document);
+    </script>
+<!--
+    To collect end-user usage analytics about your application,
+    insert the following script into each page you want to track.
+    Place this code immediately before the closing </head> tag,
+    and before any other scripts. Your first data will appear
+    automatically in just a few seconds.
+    -->
+<script type="text/javascript">
+        var appInsights = window.appInsights || function (config) {
+            function s(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, r = document, f = window, e = "script", o = r.createElement(e), i, u; for (o.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", r.getElementsByTagName(e)[0].parentNode.appendChild(o), t.cookie = r.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;)s("track" + i.pop()); return config.disableExceptionTracking || (i = "onerror", s("_" + i), u = f[i], f[i] = function (config, r, f, e, o) { var s = u && u(config, r, f, e, o); return s !== !0 && t["_" + i](config, r, f, e, o), s }), t
+        }({
+            instrumentationKey: "c2b8cab7-0152-4b03-8810-7d9be84a3b34"
+        });
+
+        window.appInsights = appInsights;
+        appInsights.trackPageView();
+    </script>
+<!-- Facebook Pixel Code -->
+<!-- Hotjar Tracking Code for http://www.anu.edu.au -->
+<script>
+        (function (h, o, t, j, a, r) {
+            h.hj = h.hj || function () { (h.hj.q = h.hj.q || []).push(arguments) };
+            h._hjSettings = { hjid: 1136231, hjsv: 6 };
+            a = o.getElementsByTagName('head')[0];
+            r = o.createElement('script'); r.async = 1;
+            r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
+            a.appendChild(r);
+        })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
+    </script>
+<script>
+        (function (a, b, c, d, e, m) {
+            a['OktopostTrackerObject'] = d;
+            a[d] = a[d] || function () {
+                (a[d].q = a[d].q || []).push(arguments);
+            };
+            e = b.createElement('script');
+            m = b.getElementsByTagName('script')[0];
+            e.async = 1;
+            e.src = ('https:' === document.location.protocol ? 'https://' : 'http://') + c;
+            m.parentNode.insertBefore(e, m);
+        })(window, document, 'static.oktopost.com/oktrk.js', '_oktrk');
+
+        _oktrk('create', '001qt43soloi771');
+    </script>
+<!-- End Facebook Pixel Code -->
+</head>
+<body id="top">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-5H3R8L" style="display:none;visibility:hidden" width="0"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+<meta content="aac4b9bd-9119-4743-8a28-82bf1124481b" name="insight-app-sec-validation"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="//marketing-pages.anu.edu.au/_anu/5/projects/htmlsites/pc.css" rel="stylesheet"/>
+<script src="//marketing-pages.anu.edu.au/_anu/4/scripts/jquery-1.11.3.min.js?1" type="text/javascript"></script>
+<script type="text/javascript">
+    var $anujq = jQuery.noConflict();
+</script>
+<script src="//marketing-pages.anu.edu.au/_anu/5/projects/htmlsites/scripts/anu-common.js" type="text/javascript"></script>
+<script src="//marketing-pages.anu.edu.au/_anu/5/projects/htmlsites/scripts/jquery.hoverIntent.js" type="text/javascript"></script>
+<!-- noindex -->
+<div id="print-hdr">
+<div class="left">
+<img alt="The Australian National University" height="40" src="//style.anu.edu.au/_anu/4/images/logos/anu_logo_print.png" width="115"/>
+</div>
+<div class="right">
+<div class="bnr-line-1 bnr-2line">Programs and Courses.</div>
+</div>
+<div class="blockline"></div>
+</div>
+<div class="bnr-gwy-high" id="bnr-wrap" role="banner">
+<div class="bnr-gwy-high" id="bnr-gwy">
+<div id="bnr-left"><a class="anu-logo-png" href="http://www.anu.edu.au/"><img alt="The Australian National University" class="text-white" src="https://marketing-pages.anu.edu.au/_anu/4/images/logos/2x_anu_logo_small.svg"/></a></div>
+<div id="bnr-mid"><div class="left"><img alt="" class="anu-logo-pipe left" height="51" src="https://marketing-pages.anu.edu.au/_anu/4/images/logos/pipe_logo_small.png" width="66"/></div><div class="left" id="bnr-h-lines"><div class="bnr-line-1 bnr-2line"><h1><a href="/">Programs and Courses</a></h1></div></div></div>
+<div id="bnr-right">
+<div class="bnr-gw2-search">
+<form action="https://find.anu.edu.au/search" autocomplete="off" id="AnuGlobalSearchForm" method="get" role="search">
+<div>
+<label class="scrnhide" for="qt">Search query</label>
+<input autocomplete="off" class="txt" id="qt" name="q" placeholder="Search ANU web, staff &amp; maps" type="search"/>
+<input class="srch-f srch-sel-gsa-hidden" data-name="as_f" name="as_f" type="hidden" value='sitename_s["Programs and courses"]'/>
+<div class="srch-sel-site">
+<ul>
+<li class="srch-sel-anu srch-selected">
+<span>Search ANU web, staff &amp; maps</span>
+<li class="srch-sel-currentsite" data-anu-searchname="Integration%20and%20Implementation%20Sciences%20%28I2S%29" id="srch-sel-currentsite-bnr">
+<span>Search current site content</span>
+</li></li></ul>
+</div>
+<div class="srch-divide" id="srch-sel-cont">
+<div class="srch-updown">
+<img alt="search scope" id="srch-sel-arrow" src="https://marketing-pages.anu.edu.au/_anu/4/images/buttons/arrow-down-black.png"/>
+</div>
+</div>
+<div class="srch-divide">
+<div class="srch-divide2"></div>
+</div>
+<button class="btn-go" id="search1" name="search1" onclick="return checkInput('qt','You must enter search terms');" value="Go">
+<span class="scrnhide">Search</span>
+<img alt="" src="https://marketing-pages.anu.edu.au/_anu/4/images/buttons/search-black.png"/>
+</button>
+</div>
+</form>
+</div>
+</div>
+<div id="bnr-low">
+<!--GW_UTILITIES-->
+</div>
+</div>
+</div>
+<div style="clear: both;"></div>
+<div class="breadcrumbs">
+<div class="breadcrumbs__inner">
+<ul class="breadcrumbs__list transition">
+<li class="breadcrumb__list-item">
+<a class="breadcrumb__list-anchor" href="/">Programs and Courses</a>
+</li>
+<li class="breadcrumb__list-item">
+<a class="breadcrumb__list-anchor" href="/catalogue?FilterByCourses=true&amp;Source=Breadcrumb">Courses</a>
+</li>
+<li class="breadcrumb__list-item">
+<a class="breadcrumb__list-anchor breadcrumb__list-anchor-current" href="/2026/course/COMP4011">COMP4011</a>
+</li>
+</ul>
+</div>
+</div>
+<div class="course">
+<!-- Intro -->
+<div class="intro" id="skip-to">
+<div class="intro__inner">
+<div class="doublenarrow transition">
+<span class="intro__degree-type">
+                    Course
+                </span>
+<h1 class="intro__degree-title">
+<span class="intro__degree-title__component">Advanced Topics in Formal Methods and Programming Languages    </span>
+</h1>
+<div class="intro__degree-description">
+<p class="intro__degree-description__text">An undergraduate course offered by the <span class="first-owner">School of Computing</span>.</p>
+<div class="molecule-container">
+<div class="molecule-individual molecule-single molecule-medium molecule-first">
+<div class="borderradius molecule" data-colour="#A71930" data-hextext="#530C18" data-opacity="75" style="color: rgba(83,12,24,0.75); background: rgba(167,25,48,0.75)">
+<span class="molecule__label"><a href="/2026/course/COMP4011">COMP4011</a></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doublenarrow transition">
+<div class="intro__apply-to-study">
+<div class="intro__apply-to-study__current-academic-year">
+<div class="dropdown">
+    Academic Year
+    <a class="current-academic-year__toggle dropdown-toggle" data-toggle="dropdown" href="#">
+        2026 <i class="fa fa-caret-down current-academic-year__caret-down-icon"></i>
+</a>
+<ul class="dropdown-menu pull-right">
+<li class="">
+<a data-ddbase="/2027/Course/Index/" href="/2027/course/COMP4011" id="ddbase2027">2027</a>
+</li>
+<li class="selected">
+<a data-ddbase="/2026/Course/Index/" href="/2026/course/COMP4011" id="ddbase2026">2026</a>
+</li>
+<li class="">
+<a data-ddbase="/2025/Course/Index/" href="/2025/course/COMP4011" id="ddbase2025">2025</a>
+</li>
+<li class="">
+<a data-ddbase="/2024/Course/Index/" href="/2024/course/COMP4011" id="ddbase2024">2024</a>
+</li>
+<li class="">
+<a data-ddbase="/2023/Course/Index/" href="/2023/course/COMP4011" id="ddbase2023">2023</a>
+</li>
+<li class="">
+<a data-ddbase="/2022/Course/Index/" href="/2022/course/COMP4011" id="ddbase2022">2022</a>
+</li>
+<li class="">
+<a data-ddbase="/2021/Course/Index/" href="/2021/course/COMP4011" id="ddbase2021">2021</a>
+</li>
+<li class="">
+<a data-ddbase="/2020/Course/Index/" href="/2020/course/COMP4011" id="ddbase2020">2020</a>
+</li>
+<li class="">
+<a data-ddbase="/2019/Course/Index/" href="/2019/course/COMP4011" id="ddbase2019">2019</a>
+</li>
+<li class="">
+<a data-ddbase="/2018/Course/Index/" href="/2018/course/COMP4011" id="ddbase2018">2018</a>
+</li>
+<li class="">
+<a data-ddbase="/2017/Course/Index/" href="/2017/course/COMP4011" id="ddbase2017">2017</a>
+</li>
+<li class="">
+<a data-ddbase="/2016/Course/Index/" href="/2016/course/COMP4011" id="ddbase2016">2016</a>
+</li>
+<li class="">
+<a data-ddbase="/2015/Course/Index/" href="/2015/course/COMP4011" id="ddbase2015">2015</a>
+</li>
+<li class="">
+<a data-ddbase="/2014/Course/Index/" href="/2014/course/COMP4011" id="ddbase2014">2014</a>
+</li>
+</ul>
+</div>
+</div>
+<div class="degree-summary show-mobile w-doublenarrow">
+<div class="degree-summary-inner">
+<ul class="degree-summary__requirements">
+<li class="degree-summary__requirements-length">
+<span class="degree-summary__requirements-heading"><i class="fa fa-cog"></i>Code</span>
+<a href="/2026/course/COMP4011">COMP4011</a>
+</li>
+<li class="degree-summary__requirements-units">
+<span class="degree-summary__requirements-heading"><i class="fa fa-book"></i>Unit Value</span>
+            6 units
+        </li>
+</ul>
+<div class="degree-summary__codes">
+<button class="degree-summary__codes-toggle" onclick="$('.degree-summary__codes-column').toggleClass('degree-summary__codes-column--hidden');$(this).toggleClass('degree-summary__codes-toggle--down');">Academic Codes <i class="fa fa-caret-right"></i></button>
+<ul class="degree-summary__codes-column degree-summary__codes-column--hidden" style="">
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-flag degree-summary__code-flag-icon"></i>Offered by</span>
+<span class="degree-summary__code-text">School of Computing</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-group degree-summary__code-icon-group"></i>ANU College</span>
+<span class="degree-summary__code-text">ANU College of Systems and Society</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>Course subject</span>
+<span class="degree-summary__code-text">Computer Science</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-tag degree-summary__code-tag-icon"></i>Areas of interest</span>
+<span class="degree-summary__code-text">Computer Science, Information Technology, Security Studies, Algorithms and Data, Computational Foundations</span>
+</li>
+</ul>
+<ul class="degree-summary__codes-column degree-summary__codes-column--hidden" style="">
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>Academic career</span>
+<span class="degree-summary__code-text">UGRD</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-user degree-summary__code-user-icon"></i>Course convener</span>
+<ul>
+<li><span class="degree-summary__code-text">Peter Hoefner</span></li>
+</ul>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-truck degree-summary__code-truck-icon"></i>Mode of delivery</span>
+<span class="degree-summary__code-text">In Person</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>Co-taught Course</span>
+<input id="cotaughtHidden" type="hidden" value="2026"/>
+<ul>
+<li>
+<span class="degree-summary__code-text">
+<a href="/2026/course/COMP8011">COMP8011</a>
+</span>
+</li>
+</ul>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-calendar degree-summary__code-calendar-icon"></i>Offered in</span>
+<span class="degree-summary__code-text">
+                                Second Semester 2026<br/>
+</span>
+<span associatedtab="#class" class="tabbed-anchor">
+<a class="degree-summary__code-text" href="#terms">See Future Offerings</a>
+</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>STEM Course</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="course-social">
+<div class="social-icons">
+<div class="twitter-wrapper">
+<a class="twitter-share-button" data-text="Currently looking at Advanced Topics in Formal Methods and Programming Languages     at ANU - Programs and Courses - " href="https://twitter.com/share">Tweet</a>
+</div>
+<script>var encodedUri = encodeURIComponent(location.href);</script>
+<div class="facebook-wrapper">
+<a class="facebook-share" href="#" onclick="(window.open('https://www.facebook.com/sharer/sharer.php?u='+encodedUri, 'facebook-share-dialog', 'width=626,height=436'));">Share on Facebook</a>
+</div>
+<div class="wattle-wrapper">
+<a class="wattle-share-button" data-text="Currently looking at Advanced Topics in Formal Methods and Programming Languages     at ANU - Programs and Courses - " href="https://wattle.anu.edu.au/" target="_blank">Wattle Share</a>
+</div>
+<div class="canvas-wrapper">
+<a class="canvas-share-button" data-text="Canvas login" href="https://canvas.anu.edu.au" target="_blank">Canvas</a>
+</div>
+<div class="google-wrapper">
+<div class="g-plusone" data-size="medium"></div>
+<script>
+</script>
+</div>
+</div>
+<div>
+<a href="http://unistats.anu.edu.au/internal/surveys/selt/learning/time-series/COMP4011_Time_Series_LRN.pdf">
+<div>
+<img src="/Content/images/selt-simple-duck.png"/>
+</div>
+<div class="bubble">
+                SELT Survey Results
+            </div>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<ul class="intro-tabs clearfix">
+<li class="intro-tabs__tab intro-tabs__tab--active">
+<a featurename="course" href="#overview">Overview</a>
+</li>
+<li class="intro-tabs__tab">
+<a featurename="course" href="#study">Study</a>
+</li>
+<li class="intro-tabs__tab">
+<a featurename="course" href="#offerings-and-fees">Fees</a>
+</li>
+<li class="intro-tabs__tab">
+<a featurename="course" href="#class">Class</a>
+</li>
+</ul>
+</div>
+<div class="intro__shadow"></div>
+</div>
+<!-- / Intro -->
+<!-- Main -->
+<div class="main">
+<div class="main-inner">
+<div class="body transition">
+<div class="degree-summary hide-mobile w-doublenarrow">
+<div class="degree-summary-inner">
+<ul class="degree-summary__requirements">
+<li class="degree-summary__requirements-length">
+<span class="degree-summary__requirements-heading"><i class="fa fa-cog"></i>Code</span>
+<a href="/2026/course/COMP4011">COMP4011</a>
+</li>
+<li class="degree-summary__requirements-units">
+<span class="degree-summary__requirements-heading"><i class="fa fa-book"></i>Unit Value</span>
+            6 units
+        </li>
+</ul>
+<div class="degree-summary__codes">
+<ul class="degree-summary__codes-column" style="">
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-flag degree-summary__code-flag-icon"></i>Offered by</span>
+<span class="degree-summary__code-text">School of Computing</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-group degree-summary__code-icon-group"></i>ANU College</span>
+<span class="degree-summary__code-text">ANU College of Systems and Society</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>Course subject</span>
+<span class="degree-summary__code-text">Computer Science</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-tag degree-summary__code-tag-icon"></i>Areas of interest</span>
+<span class="degree-summary__code-text">Computer Science, Information Technology, Security Studies, Algorithms and Data, Computational Foundations</span>
+</li>
+</ul>
+<ul class="degree-summary__codes-column" style="">
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>Academic career</span>
+<span class="degree-summary__code-text">UGRD</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-user degree-summary__code-user-icon"></i>Course convener</span>
+<ul>
+<li><span class="degree-summary__code-text">Peter Hoefner</span></li>
+</ul>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-truck degree-summary__code-truck-icon"></i>Mode of delivery</span>
+<span class="degree-summary__code-text">In Person</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>Co-taught Course</span>
+<input id="cotaughtHidden" type="hidden" value="2026"/>
+<ul>
+<li>
+<span class="degree-summary__code-text">
+<a href="/2026/course/COMP8011">COMP8011</a>
+</span>
+</li>
+</ul>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-calendar degree-summary__code-calendar-icon"></i>Offered in</span>
+<span class="degree-summary__code-text">
+                                Second Semester 2026<br/>
+</span>
+<span associatedtab="#class" class="tabbed-anchor">
+<a class="degree-summary__code-text" href="#terms">See Future Offerings</a>
+</span>
+</li>
+<li class="degree-summary__code">
+<span class="degree-summary__code-heading"><i class="fa fa-book degree-summary__code-book-icon"></i>STEM Course</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="course-social">
+<div class="social-icons">
+<div class="twitter-wrapper">
+<a class="twitter-share-button" data-text="Currently looking at Advanced Topics in Formal Methods and Programming Languages     at ANU - Programs and Courses - " href="https://twitter.com/share">Tweet</a>
+</div>
+<script>var encodedUri = encodeURIComponent(location.href);</script>
+<div class="facebook-wrapper">
+<a class="facebook-share" href="#" onclick="(window.open('https://www.facebook.com/sharer/sharer.php?u='+encodedUri, 'facebook-share-dialog', 'width=626,height=436'));">Share on Facebook</a>
+</div>
+<div class="wattle-wrapper">
+<a class="wattle-share-button" data-text="Currently looking at Advanced Topics in Formal Methods and Programming Languages     at ANU - Programs and Courses - " href="https://wattle.anu.edu.au/" target="_blank">Wattle Share</a>
+</div>
+<div class="canvas-wrapper">
+<a class="canvas-share-button" data-text="Canvas login" href="https://canvas.anu.edu.au" target="_blank">Canvas</a>
+</div>
+<div class="google-wrapper">
+<div class="g-plusone" data-size="medium"></div>
+<script>
+</script>
+</div>
+</div>
+<div>
+<a href="http://unistats.anu.edu.au/internal/surveys/selt/learning/time-series/COMP4011_Time_Series_LRN.pdf">
+<div>
+<img src="/Content/images/selt-simple-duck.png"/>
+</div>
+<div class="bubble">
+                SELT Survey Results
+            </div>
+</a>
+</div>
+</div>
+</div>
+<div class="w-narrow secondary-navigation-wrapper sticky">
+<div class="w-narrow secondary-navigation-aside">
+<span class="secondary-navigation-aside__heading">Advanced Topics in Formal Methods and Programming Languages     (<a href="/2026/course/COMP4011">COMP4011</a>)</span>
+<ul class="secondary-navigation nav">
+<li associatedtab="#overview" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#introduction">Introduction</a>
+</li>
+<li associatedtab="#overview" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#learning-outcomes">Learning Outcomes</a>
+</li>
+<li associatedtab="#study" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#indicative-assessment">Indicative Assessment</a>
+</li>
+<li associatedtab="#study" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#workload">Workload</a>
+</li>
+<li associatedtab="#study" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#inherent-requirements">Inherent Requirements</a>
+</li>
+<li associatedtab="#study" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#incompatibility">Requisite and Incompatibility</a>
+</li>
+<li associatedtab="#study" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#prescribed-texts">Prescribed Texts</a>
+</li>
+<li associatedtab="#overview" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#other-information">Other Information</a>
+</li>
+<li associatedtab="#offerings-and-fees" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#fees">Fees</a>
+</li>
+<li associatedtab="#class" class="secondary-navigation__list-item">
+<a class="secondary-navigation__anchor" href="#terms">Offerings and Dates</a>
+</li>
+</ul>
+</div>
+</div>
+<div class="tab-content" id="overview">
+<div class="body__inner w-doublewide copy">
+<div class="introduction" id="introduction"><p>This course offers students a unique opportunity for the advanced study of a special thematic area within the discipline of Theoretical Computer Science. The topics will vary from year to year in response to emerging theoretical and practical issues in the discipline, as well as the research interests and expertise of academics and sessional staff. They will be drawn from the broad areas of formal methods and programming languages, and could include (but not limited to) the following topics: computational logic, category theory, concurrency theory, type theory, semantics of programming languages, computer-assisted theorem proving, model checking, formal methods for security, and formal verification of hardware and software systems.</p><p><br/></p></div>
+<h2 id="learning-outcomes">Learning Outcomes</h2>
+<p>
+                                Upon successful completion, students will have the knowledge and skills to:
+                            </p>
+<ol><li> Demonstrate a broad knowledge in the advanced topic and its role and applications in modern computing systems</li><li>Critically evaluate the scientific literature related to the advanced topic and/or applications of the advanced topic in modern computing systems</li><li>Plan and execute project work and/or a piece of research and scholarship in the advanced topic</li></ol>
+<h2 id="other-information">Other Information</h2>
+<p>Pre-requisite courses for the Advanced Topic will be listed on the SoCo website when the course topic is announced. Students who meet the pre-requisites can request a permission code following the instructions at <a href="https://cecc.anu.edu.au/current-students/program-management/enrolling-cecc-courses" rel="noopener noreferrer" target="_blank">Enrolling in CECC courses</a> .</p><p>Students will be able to receive credit for completing this course up to 3 times provided they complete three different Advanced  topics.</p> </div>
+</div>
+<div class="tab-content" id="study">
+<div class="body__inner w-doublewide copy">
+<h2 id="indicative-assessment">Indicative Assessment</h2>
+<ol><li>Assessments and their weighting will vary depending on the nature of the topic. Specific details will be presented in the Class Summary. (100) [LO 1,2,3]</li></ol> <p>The ANU uses Turnitin to enhance student citation and referencing techniques, and to assess assignment submissions as a component of the University's approach to managing Academic Integrity. While the use of Turnitin is not mandatory, the ANU highly recommends Turnitin is used by both teaching staff and students. For additional information regarding Turnitin please visit the <a href="http://services.anu.edu.au/information-technology/software-systems/turnitin">ANU Online</a> website.</p> <h2 id="workload">Workload</h2>
+<p>Combination of Class hours and self study to total 130 hours as outline in the Class Summary.</p>
+<h2 id="inherent-requirements">Inherent Requirements</h2>
+<p>None</p>
+<h2 id="incompatibility">Requisite and Incompatibility</h2>
+<div class="requisite">12 units of 3000 and/or 4000 level COMP courses.
+
+Additional Prerequisite courses for the Advanced Topic will be listed on the SoCo website when the course topic is announced. Students who meet the pre-requisites can request a permission code following the instructions Enrolling in CECC courses .</div>
+<p>You will need to contact the School of Computing to request a permission code to enrol in this course.</p> <h2 id="prescribed-texts">Prescribed Texts</h2>
+<p>All readings and texts required for this course will be posted on the course site.</p>
+<!-- START SUB-PLANS -->
+<!-- END SUB PLANS -->
+</div>
+</div>
+<div class="tab-content" id="offerings-and-fees">
+<div class="body__inner w-doublewide copy">
+<div>
+<h2 id="fees">Fees</h2>
+<p>Tuition fees are for the academic year indicated at the top of the page.  </p><p><strong>Commonwealth Support (CSP) Students</strong><br/><span style="font-family: arial,helvetica,sans-serif">If you have been offered a Commonwealth supported place, your fees are set by the Australian Government for each course. At ANU 1 EFTSL is 48 units (normally 8 x 6-unit courses). More information about your student contribution amount for each course at <strong><a href="https://www.anu.edu.au/students/program-administration/fees-payments/student-contributions">Fees</a></strong>.  </span></p>
+<dl class="student-contribution-band">
+<dt>Student Contribution Band:</dt>
+<dd><a href="https://students.anu.edu.au/fees/domestic/csp.php">2</a></dd>
+<dt>Unit value:</dt>
+<dd>6 units</dd>
+</dl>
+<p>If you are a <strong>domestic graduate coursework student </strong>with a Domestic Tuition Fee (DTF) place<strong> or international student</strong> you will be required to pay course tuition fees (see below). Course tuition fees are indexed annually. Further information for domestic and international students about tuition and other fees can be found at <strong><a href="http://students.anu.edu.au/fees/">Fees</a></strong>.</p><p><span style="font-family: arial,helvetica,sans-serif">Where there is a unit range displayed for this course, not all unit options below may be available.</span></p>
+<table class="table-fees">
+<thead>
+<tr>
+<th class="table-minimal__heading">Units</th>
+<th class="table-minimal__heading">EFTSL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.00</td>
+<td>0.12500</td>
+</tr>
+</tbody>
+</table>
+<div>
+<div class="callout-box callout-box--right" id="indicative-fees">
+<div class="callout-box__header clearfix">
+<h2 class="callout-box__title">Course fees</h2>
+<div class="callout-box__tabs clearfix">
+<a class="callout-box__tab callout-box__tab--active" href="#indicative-fees__domestic" onclick="$('.callout-box__tab').toggleClass('callout-box__tab--active');$('.callout-box__tab-content').toggleClass('callout-box__tab-content--active');return false;">
+                                                    Domestic
+                                                </a>
+<a class="callout-box__tab" href="#indicative-fees__international" onclick="$('.callout-box__tab').toggleClass('callout-box__tab--active');$('.callout-box__tab-content').toggleClass('callout-box__tab-content--active');return false;">
+                                                        International
+                                                    </a>
+</div>
+</div>
+<div class="callout-box__content">
+<div class="callout-box__tab-content callout-box__tab-content--active" id="indicative-fees__domestic">
+<dl>
+<dt>Domestic fee paying students</dt>
+</dl>
+<table class="table-fees">
+<thead>
+<tr>
+<th class="table-minimal__heading">Year</th>
+<th class="table-minimal__heading">Fee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026</td>
+<td>$5520</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="callout-box__tab-content" id="indicative-fees__international">
+<dl>
+<dt>International fee paying students</dt>
+</dl>
+<div>
+<table class="table-fees">
+<thead>
+<tr>
+<th class="table-minimal__heading">Year</th>
+<th class="table-minimal__heading">Fee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026</td>
+<td>$7020</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<span><b>Note: </b>Please note that fee information is for current year only.</span>
+</div>
+<br/>
+</div>
+</div>
+<div class="tab-content" id="class">
+<div class="body__inner w-doublewide copy">
+<h2 id="terms">Offerings, Dates and Class Summary Links</h2>
+<div class="notice">
+<p>ANU utilises MyTimetable to enable students to view the timetable for their enrolled courses, browse, then self-allocate to small teaching activities / tutorials so they can better plan their time.  Find out more on the <a href="https://www.anu.edu.au/students/program-administration/timetabling">Timetable webpage</a>.</p>
+</div>
+<div>
+<span>The list of offerings for future years is indicative only.</span>
+<br/>
+<span>
+                                    Class summaries, if available, can be accessed by clicking on the View link for the relevant class number.
+                                </span>
+</div>
+<div id="tabs-container">
+<div class="course-tabs-menu">
+<div class="course-tab current"><a href="#course-tab-1">2026</a></div>
+<div class="course-tab"><a href="#course-tab-2">2027</a></div>
+<div class="course-tab"><a href="#course-tab-3">2028</a></div>
+</div>
+<div class="course-tab">
+<div class="course-tab-content" id="course-tab-1" style="display:block">
+<h3>Second Semester</h3>
+<table class="table-terms">
+<thead>
+<tr>
+<th class="table-heading-classNumber">Class number</th>
+<th class="table-heading-classDate">Class start date</th>
+<th class="table-heading-classDate">Last day to enrol</th>
+<th class="table-heading-classDate">Census date</th>
+<th class="table-heading-classDate">Class end date</th>
+<th class="table-heading-classDate">Mode Of Delivery</th>
+<th class="table-heading-classDate">Class Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="7"><strong>Software Verification using Proof Assistant</strong></td>
+</tr>
+<tr>
+<td>9011</td>
+<td>
+27 Jul 2026                                                                </td>
+<td>
+03 Aug 2026                                                                </td>
+<td>
+31 Aug 2026                                                                </td>
+<td>
+30 Oct 2026                                                                </td>
+<td>
+In Person                                                                </td>
+<td>
+<a href="/2026/course/COMP4011/Second%20Semester/9011">View</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="course-tab-content" id="course-tab-2" style="display:none">
+<h3>Second Semester</h3>
+<table class="table-terms">
+<thead>
+<tr>
+<th class="table-heading-classNumber">Class number</th>
+<th class="table-heading-classDate">Class start date</th>
+<th class="table-heading-classDate">Last day to enrol</th>
+<th class="table-heading-classDate">Census date</th>
+<th class="table-heading-classDate">Class end date</th>
+<th class="table-heading-classDate">Mode Of Delivery</th>
+<th class="table-heading-classDate">Class Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10078</td>
+<td>
+26 Jul 2027                                                                </td>
+<td>
+02 Aug 2027                                                                </td>
+<td>
+31 Aug 2027                                                                </td>
+<td>
+29 Oct 2027                                                                </td>
+<td>
+In Person                                                                </td>
+<td>
+                                                                        N/A                                                                </td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="course-tab-content" id="course-tab-3" style="display:none">
+<h3>Second Semester</h3>
+<table class="table-terms">
+<thead>
+<tr>
+<th class="table-heading-classNumber">Class number</th>
+<th class="table-heading-classDate">Class start date</th>
+<th class="table-heading-classDate">Last day to enrol</th>
+<th class="table-heading-classDate">Census date</th>
+<th class="table-heading-classDate">Class end date</th>
+<th class="table-heading-classDate">Mode Of Delivery</th>
+<th class="table-heading-classDate">Class Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10840</td>
+<td>
+24 Jul 2028                                                                </td>
+<td>
+31 Jul 2028                                                                </td>
+<td>
+31 Aug 2028                                                                </td>
+<td>
+27 Oct 2028                                                                </td>
+<td>
+In Person                                                                </td>
+<td>
+                                                                        N/A                                                                </td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="page-contact transition" style="clear: both">
+<div class="page-contact__inner">
+<p class="page-contact-info"><strong>Responsible Officer:</strong> Registrar, Student Administration <span>/</span> <strong>Page Contact:</strong> <a href="mailto:programsandcourses@anu.edu.au">Website Administrator</a> <span>/</span> <a href="/2026/Faq">Frequently Asked Questions</a></p>
+</div>
+</div>
+<footer aria-label="Footer banner" class="anu-wf-footer" data-tracker="anu" role="contentinfo"></footer>
+<script src="https://webstyle.anu.edu.au/widgets/bundle.js"></script>
+<script src="/Scripts/js?v=Mi2Qwm3KPW7LFN2gtwGuUSqdr1sXd7WluvcLru3Dl4Q1"></script>
+<script src="/Scripts/Knockout/js?v=LOGR7woollVSO0HK_vlQxp4gdzRw7kB5Dv4n6oXE6LY1"></script>
+<script src="/Scripts/misc.js" type="text/javascript"></script>
+<script src="/Scripts/MoleculeColourFallback/js?v=cF6g_av_aq_3K49endnkXkBwpL-8fcTbVY7dOP880xk1"></script>
+<script src="/Scripts/MoleculeColourToOwner/js?v=lvYw3HmvcPAuyLdhuBSllZTwGTnEI51QqMWksyIVkFk1"></script>
+<script src="/Scripts/video/js?v=-XHrFjWWn56AK2mxbgjoUT_9cKeeP7EaoKmFP4qL9a81"></script>
+<script src="/Scripts/SocialMedia/js?v=dNedT8IkbODerVmLKImXwBZJAm48G6VS1XKlkEIynUY1"></script>
+<script async="" src="https://www.youtube.com/iframe_api" type="text/javascript"></script>
+<!-- Google Analytics -->
+<script>
+        if (typeof ga === 'undefined') {
+            (function (i, s, o, g, r, a, m) {
+                i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                    (i[r].q = i[r].q || []).push(arguments)
+                }, i[r].l = 1 * new Date(); a = s.createElement(o),
+                    m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+            })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+        }
+        ga('create', 'UA-5266663-4', 'auto', { 'name': 'allANU' });
+        ga('allANU.send', 'pageview');
+    </script>
+</body>
+</html>

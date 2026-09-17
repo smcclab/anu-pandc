@@ -137,8 +137,16 @@ def _get_offerings(soup: BeautifulSoup) -> list[dict]:
     """Extract future offering information from the #class tab.
 
     Returns a list of dicts with keys: year, semester, mode, class_number,
-    summary_url. summary_url is None when the row shows "N/A" (no live class
-    summary page yet — typical for future-year offerings).
+    summary_url, topic. summary_url is None when the row shows "N/A" (no live
+    class summary page yet — typical for future-year offerings).
+
+    topic is the class's advertised topic title, or "". Special-topics shells
+    (COMP2710, COMP3710, COMP4011, COMP4620, ...) put it in a single
+    colspan="7" row — "<strong>Software Verification using Proof
+    Assistant</strong>" — immediately above the class row it labels. That is
+    the only place P&C records what a given instance of a topics course was
+    about, and the only handle for spotting a student re-taking the same topic
+    under the same or a different code.
     """
     class_tab = soup.find(id="class")
     if not class_tab:
@@ -166,8 +174,13 @@ def _get_offerings(soup: BeautifulSoup) -> list[dict]:
             table = h3.find_next_sibling("table")
             if not table:
                 continue
+            topic = ""
             for row in table.find_all("tr"):
                 tds = row.find_all("td")
+                # A single wide cell above a class row names that class's topic.
+                if len(tds) == 1 and tds[0].get("colspan"):
+                    topic = tds[0].get_text(" ", strip=True)
+                    continue
                 # columns: class_number, start, last_enrol, census, end, mode, summary
                 if len(tds) < 6:
                     continue
@@ -184,7 +197,9 @@ def _get_offerings(soup: BeautifulSoup) -> list[dict]:
                     "mode": mode,
                     "class_number": class_number,
                     "summary_url": summary_url,
+                    "topic": topic,
                 })
+                topic = ""
 
     return offerings
 
@@ -316,7 +331,7 @@ def course_to_markdown(data: dict, scraped_at: str) -> str:
         lines.append(f"- **Co-taught with:** {', '.join(cotaught)}")
     offerings = data.get("offerings", [])
     if offerings:
-        # Compact: "2027 First Semester (In Person, class 3695)"
+        # Compact: "2027 First Semester (In Person, class 3695) — Topic title"
         offering_strs = []
         for o in offerings:
             base = f"{o['year']} {o['semester']}"
@@ -327,6 +342,9 @@ def course_to_markdown(data: dict, scraped_at: str) -> str:
                 extras.append(f"class {o['class_number']}")
             if extras:
                 base += f" ({', '.join(extras)})"
+            if o.get("topic"):
+                # Entries are joined with ";", so the topic must not carry one.
+                base += f" — {o['topic'].replace(';', ',')}"
             offering_strs.append(base)
         lines.append(f"- **Offered in:** {'; '.join(offering_strs)}")
     else:

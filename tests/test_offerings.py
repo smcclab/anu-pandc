@@ -2,7 +2,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-from anu_pandc.offerings import course_from_markdown as _parse_markdown, offerings_to_markdown as _to_markdown
+from anu_pandc.offerings import course_from_markdown as _parse_markdown, offerings_to_markdown as _to_markdown, rows_by_year, offerings_to_markdown
 from anu_pandc.parse.courses import parse_course, course_to_markdown
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -83,7 +83,7 @@ def test_no_future_offerings_yields_none(tmp_path):
 def test_offering_without_class_number(tmp_path):
     offerings = _parse_markdown(write(tmp_path, NO_CLASS_NUMBER_PAGE))["offerings"]
     assert offerings == [{"year": "2028", "semester": "First Semester",
-                          "mode": "", "class_number": ""}]
+                          "mode": "", "class_number": "", "topic": ""}]
 
 
 # --- round trip against the writer, so the two cannot drift apart ---
@@ -112,3 +112,26 @@ def test_markdown_pairs_each_semester_with_its_class():
     ]
     # S1 must sort before S2 even though its class number is the lower string
     assert "| S1 (6679) / S2 (11051) |" in _to_markdown(rows, "2028", "2027", "COMP")
+
+
+TOPIC_PAGE = """# COMP4011 — Advanced Topics in Formal Methods (6 units, Level 4000)
+
+- **Offered in:** 2026 Second Semester (In Person, class 9011) — \
+Software Verification using Proof Assistant; 2027 Second Semester (In Person, class 10078)
+"""
+
+
+def test_topic_round_trips_through_markdown(tmp_path):
+    offerings = _parse_markdown(write(tmp_path, TOPIC_PAGE))["offerings"]
+    assert {o["year"]: o["topic"] for o in offerings} == {
+        "2026": "Software Verification using Proof Assistant", "2027": ""}
+    assert offerings[0]["class_number"] == "9011"
+    assert offerings[0]["mode"] == "In Person"
+
+
+def test_topic_shown_in_offerings_table(tmp_path):
+    course = _parse_markdown(write(tmp_path, TOPIC_PAGE))
+    rows = rows_by_year([course])["2026"]
+    assert rows[0]["topic"] == "Software Verification using Proof Assistant"
+    md = offerings_to_markdown(rows, "2026", "2026", "COMP")
+    assert "S2 (9011) “Software Verification using Proof Assistant”" in md

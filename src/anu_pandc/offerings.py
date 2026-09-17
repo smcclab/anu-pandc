@@ -18,7 +18,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-FIELDS = ["course", "title", "units", "semester", "class_number", "mode"]
+FIELDS = ["course", "title", "units", "semester", "class_number", "mode", "topic"]
 
 # "- **Offered in:** 2027 First Semester (In Person, class 5099); 2028 ..."
 _OFFERED_RE = re.compile(r"^- \*\*Offered in:\*\* (.+)$", re.M)
@@ -28,8 +28,12 @@ _HEADING_RE = re.compile(
     r"(?:\s*\((?P<units>[\d.]+) units[^)]*\))?\s*$",
     re.M,
 )
-# "2028 First Semester (In Person, class 6679)" - mode and class are optional
-_ENTRY_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<semester>.+?)(?:\s+\((?P<detail>[^)]*)\))?$")
+# "2028 First Semester (In Person, class 6679) — Topic title"
+# The parenthetical and the topic (after an em dash) are both optional.
+_ENTRY_RE = re.compile(
+    r"^(?P<year>\d{4})\s+(?P<semester>.+?)(?:\s+\((?P<detail>[^)]*)\))?"
+    r"(?:\s+— (?P<topic>.+))?$"
+)
 
 SEMESTER_ORDER = ["Summer Session", "First Semester", "Autumn Session",
                   "Winter Session", "Second Semester", "Spring Session"]
@@ -63,6 +67,7 @@ def course_from_markdown(path: Path) -> dict:
                 "semester": entry.group("semester").strip(),
                 "mode": mode,
                 "class_number": class_number,
+                "topic": (entry.group("topic") or "").strip(),
             })
 
     return {
@@ -85,6 +90,7 @@ def rows_by_year(courses: list[dict]) -> dict[str, list[dict]]:
                 "semester": o.get("semester", ""),
                 "class_number": o.get("class_number", ""),
                 "mode": o.get("mode", ""),
+                "topic": o.get("topic", ""),
             })
     for rows in out.values():
         rows.sort(key=lambda r: (r["course"], r["semester"]))
@@ -103,7 +109,7 @@ def offerings_to_markdown(rows: list[dict], offering_year: str, source_year: str
     for row in rows:
         entry = by_course.setdefault(row["course"], {
             "title": row["title"], "units": row["units"], "sittings": []})
-        entry["sittings"].append((row["semester"], row["class_number"]))
+        entry["sittings"].append((row["semester"], row["class_number"], row.get("topic", "")))
 
     label = f"{prefix} planned offerings" if prefix else "Planned offerings"
     lines = [
@@ -120,8 +126,9 @@ def offerings_to_markdown(rows: list[dict], offering_year: str, source_year: str
         entry = by_course[code]
         sittings = sorted(set(entry["sittings"]), key=lambda s: (_semester_key(s[0]), s[1]))
         rendered = " / ".join(
-            f"{SEMESTER_SHORT.get(sem, sem)} ({cls})" if cls else SEMESTER_SHORT.get(sem, sem)
-            for sem, cls in sittings
+            (f"{SEMESTER_SHORT.get(sem, sem)} ({cls})" if cls else SEMESTER_SHORT.get(sem, sem))
+            + (f" “{topic}”" if topic else "")
+            for sem, cls, topic in sittings
         )
         lines.append(f"| {code} | {entry['title']} | {entry['units']} | {rendered} |")
     return "\n".join(lines) + "\n"

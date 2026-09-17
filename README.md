@@ -167,7 +167,8 @@ write `.json` files with the same names. Existing files are skipped unless
 **Course pages**: title, units, level, prerequisites and incompatibilities
 (split heuristically, with the raw requisite text preserved), co-taught
 codes, description, learning outcomes, indicative assessment with weights, and
-the "Offered in" table (year, session, mode, class number, summary link).
+the "Offered in" table (year, session, mode, class number, summary link, and
+  the advertised topic title for special-topics shells such as COMP4011).
 
 **Program and subplan pages**: title, total units, introduction, learning
 outcomes, requirement groups as tables of courses, and the list of

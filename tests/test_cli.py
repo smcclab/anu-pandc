@@ -165,8 +165,8 @@ def test_offerings_from_saved_tree(tmp_path):
     r = run("offerings", "--year", "2027", "--from", str(tmp_path), "--save", str(tmp_path), "--prefix", "COMP")
     assert r.exit_code == 0, r.stderr
     assert (tmp_path / "2027/offerings-COMP.csv").read_text().splitlines() == [
-        "course,title,units,semester,class_number,mode",
-        "COMP3430,Data Wrangling,6,Second Semester,10085,In Person"]
+        "course,title,units,semester,class_number,mode,topic",
+        "COMP3430,Data Wrangling,6,Second Semester,10085,In Person,"]
     assert "10846" in (tmp_path / "2028/offerings-COMP.csv").read_text()
 
 
@@ -176,7 +176,7 @@ def test_offerings_prints_csv_by_default(tmp_path):
         "# COMP3430 — Data Wrangling (6 units, Level 3000)\n\n"
         "- **Offered in:** 2027 Second Semester (In Person, class 10085)\n")
     r = run("offerings", "--year", "2027", "--from", str(tmp_path))
-    assert r.stdout.splitlines()[0] == "course,title,units,semester,class_number,mode"
+    assert r.stdout.splitlines()[0] == "course,title,units,semester,class_number,mode,topic"
 
 
 def test_conveners_from_tree(tmp_path):

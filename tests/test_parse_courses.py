@@ -300,3 +300,19 @@ def test_requisite_section_stops_at_the_next_heading():
 def test_requisite_absent_section():
     page = BeautifulSoup("<h2>Prescribed Texts</h2><p>None</p>", "html.parser")
     assert _get_requisites(page) == ("None", "None", "")
+
+
+# --- COMP4011 2026 (special-topics shell: the class tab names the topic) ---
+def test_comp4011_topic_row_is_attached_to_its_class():
+    data = parse_course(soup("course_COMP4011_2026"), "COMP4011", "https://x")
+    by_class = {o["class_number"]: o for o in data["offerings"]}
+    assert by_class["9011"]["topic"] == "Software Verification using Proof Assistant"
+    # The topic row is not itself an offering, and later years without one stay blank.
+    assert by_class["10078"]["topic"] == ""
+    assert all(o["class_number"] for o in data["offerings"])
+
+
+def test_comp4011_topic_rendered_in_markdown():
+    data = parse_course(soup("course_COMP4011_2026"), "COMP4011", "https://x")
+    md = course_to_markdown(data, "2026-01-01T00:00:00Z")
+    assert "class 9011) — Software Verification using Proof Assistant;" in md
