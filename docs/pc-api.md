@@ -39,5 +39,8 @@ curl "https://programsandcourses.anu.edu.au/data/CourseSearch/GetCourses?\
 AppliedFilter=FilterByCourses&SearchText=COMP&PageIndex=0&MaxPageSize=50&SelectedYear=2026"
 ```
 
+For using these (and the HTML pages) from an agent with only a web-fetch tool,
+see [reading-pandc-directly.md](reading-pandc-directly.md).
+
 `anu_pandc.catalogue` wraps `GetCourses` (the `anu-pandc catalogue` command);
 the subplan and program endpoints are not yet wrapped.

@@ -86,6 +86,11 @@ Everything that reads a saved tree — `offerings --from`, `conveners --from`,
 and the parsers in `anu_pandc.parse` — works with no network at all, so an
 agent that cannot reach ANU can still work from data someone else committed.
 
+If the *tool* is blocked but the agent has a web-fetch or browser tool that is
+not, it can read P&C directly over plain HTTPS:
+[docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) gives it the
+URL shapes and the recipes.
+
 ## Quick start
 
 ```bash
@@ -212,6 +217,13 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
 
 ## Further reading
 
+- [docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) — how to read
+  P&C with nothing but a web-fetch tool: the URL shapes for courses, programs,
+  subplans and class summaries, how to find who is convening something, how to
+  tell an error page from a real one, and how to work out which year and
+  teaching period a question is actually about. Written for an agent or chat
+  that cannot run this CLI. Point one at the [raw
+  file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md).
 - [docs/pc-api.md](docs/pc-api.md) — the undocumented JSON endpoints behind the
   P&C catalogue search, what they return, and the quirks worth knowing (the
   page size cap, which server-side filters silently do nothing, how far back
