@@ -1,6 +1,6 @@
 [project]
 name = "anu-pandc"
-version = "0.1.0"
+version = "0.1.1"
 description = "A command-line interface to ANU Programs & Courses: programs, majors/minors/specialisations, courses, class summaries and the course catalogue, as Markdown, JSON or CSV."
 readme = "README.md"
 license = "MIT"
