@@ -42,6 +42,18 @@ class Forbidden(requests.exceptions.HTTPError):
 
 def _forbidden_hint(response: requests.Response) -> str:
     """Explain a 403: P&C itself, or something between us and it."""
+    # Agent sandboxes state it outright; nothing left to work out.
+    deny_reason = response.headers.get("x-deny-reason")
+    if deny_reason:
+        return (
+            f"403 Forbidden for {response.url}, from your own network's egress "
+            f"gateway rather than from ANU (x-deny-reason: {deny_reason}). The host "
+            "programsandcourses.anu.edu.au is not on this environment's outbound "
+            "allow-list. No header, proxy or DNS change gets around a gateway "
+            "refusal: either have the host allow-listed, or work offline from a "
+            "saved tree with --from."
+        )
+
     from_origin = any(h in response.headers for h in _ORIGIN_HEADERS)
     where = (
         "The response carries Programs & Courses' own headers, so ANU refused it."

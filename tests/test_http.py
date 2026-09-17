@@ -69,3 +69,18 @@ def test_user_agent_can_be_overridden_by_env(monkeypatch):
     finally:
         monkeypatch.delenv("ANU_PANDC_USER_AGENT")
         importlib.reload(http)
+
+
+@resp.activate
+def test_forbidden_reports_a_gateway_deny_reason_verbatim():
+    resp.add(
+        resp.GET,
+        "https://example.com",
+        status=403,
+        headers={"x-deny-reason": "host_not_allowed"},
+    )
+    with pytest.raises(http.Forbidden) as caught:
+        http.fetch_page("https://example.com")
+    message = str(caught.value)
+    assert "host_not_allowed" in message
+    assert "egress gateway" in message

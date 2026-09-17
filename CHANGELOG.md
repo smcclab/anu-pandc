@@ -9,9 +9,9 @@ All notable changes to this project are recorded here. The format follows
 ### Added
 
 - A 403 now explains itself: the error says whether the refusal carried
-  Programs & Courses' own headers (ANU refused it) or none of them (a proxy,
-  firewall or sandbox egress allow-list in between did), and what to do about
-  each. README gains a section on running the tool from sandboxes, CI and
+  Programs & Courses' own headers (ANU refused it), or an `x-deny-reason`
+  header (your own egress gateway refused the host outright), or neither (a
+  proxy or firewall in between), and what to do about each. README gains a section on running the tool from sandboxes, CI and
   agent environments.
 - `ANU_PANDC_USER_AGENT` overrides the default identifying User-Agent.
 

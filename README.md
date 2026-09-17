@@ -72,6 +72,11 @@ curl -sS -D- -o /dev/null https://programsandcourses.anu.edu.au/2026/course/COMP
 ```
 
 A 200 with `Request-Context` and `ARRAffinity` headers means the path is clear.
+A 403 carrying an `x-deny-reason` header (for example `host_not_allowed`) is
+your own gateway refusing the host, and no header, proxy or DNS change will get
+around it — the host has to be allow-listed. Claude Code's cloud sandboxes
+refuse it this way today, while GitHub is permitted, so installing works and
+fetching does not.
 
 `ANU_PANDC_USER_AGENT` overrides the identifying User-Agent if you need to say
 who you are differently; standard `HTTPS_PROXY` / `NO_PROXY` variables are
