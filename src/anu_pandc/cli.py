@@ -62,7 +62,7 @@ def _fail(message: str) -> None:
 @click.option("-v", "--verbose", is_flag=True, help="Show every fetch.")
 @click.option("-q", "--quiet", is_flag=True, help="Only show errors.")
 def cli(rate, verbose, quiet):
-    """Scrape ANU Programs & Courses.
+    """A command-line interface to ANU Programs & Courses.
 
     Point it at any program, major/minor/specialisation or course code and a
     year. Print the page as Markdown or JSON, or save a whole tree of them.

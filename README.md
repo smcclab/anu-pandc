@@ -1,6 +1,11 @@
 # anu-pandc
 
-A command-line scraper for [ANU Programs & Courses](https://programsandcourses.anu.edu.au).
+A command-line interface to [ANU Programs & Courses](https://programsandcourses.anu.edu.au).
+
+> **Unofficial.** This is a personal project. It is not affiliated with,
+> endorsed by, or supported by the Australian National University. It reads the
+> public Programs & Courses website; it holds no data of its own.
+
 Point it at any program, major/minor/specialisation or course code and a year.
 It prints the page as clean Markdown (or JSON), or saves a whole year of a
 school's curriculum as a tree of small files you can grep, diff and commit.
@@ -14,18 +19,28 @@ API, and extracts planned offerings for future years before P&C publishes them.
 With [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install git+https://gitlab.anu.edu.au/u4110680/anu-pandc.git
+uv tool install anu-pandc
 anu-pandc --help
 ```
 
 Or run it without installing:
 
 ```bash
-uvx --from git+https://gitlab.anu.edu.au/u4110680/anu-pandc.git anu-pandc get COMP1730 --year 2026
+uvx anu-pandc get COMP1730 --year 2026
 ```
 
-Or with pip: `pip install git+https://gitlab.anu.edu.au/u4110680/anu-pandc.git`.
-Python 3.11 or newer.
+Or with pip: `pip install anu-pandc`. Python 3.11 or newer.
+
+To track the development version instead, install from the repository:
+`uv tool install git+https://gitlab.anu.edu.au/u4110680/anu-pandc.git`.
+
+## Status
+
+Best effort. It reads pages ANU changes without notice, so a P&C redesign will
+break it until the parsers are updated. It is polite by default: one session, a
+self-identifying User-Agent, and a half-second pause before every request. Turn
+that up with `--rate` when reading a lot at once, and please don't turn it down
+to zero against the live site.
 
 ## Quick start
 
