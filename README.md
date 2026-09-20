@@ -57,7 +57,9 @@ A question with a date in it ("this week", "is it census yet", "what's on in
 September") is a **calendar** question before it is anything else — resolve the
 date against the calendar first, then go to the timetable or the class summary.
 Course pages are year-scoped, so resolve the year explicitly before you fetch
-anything.
+anything. And a calendar range that says a class is not running when the
+timetable schedules it means you paired the range wrongly: "Return from
+teaching break" is the first day *back*.
 
 ## Install
 

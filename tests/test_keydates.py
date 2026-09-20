@@ -41,7 +41,24 @@ def test_ranges_pair_a_break_with_its_return():
     # which puts its marker at the front of the summary.
     breaks = [r for r in keydates.ranges(events()) if r["name"] == "Teaching break"]
     assert [(r["start"], r["end"]) for r in breaks] == \
-        [("2026-04-06", "2026-04-20"), ("2026-09-07", "2026-09-21")]
+        [("2026-04-06", "2026-04-19"), ("2026-09-07", "2026-09-20")]
+
+
+def test_a_return_closes_the_range_the_day_before_it():
+    # "Return from teaching break" is the first day BACK, not the last day off.
+    # Ending the range on it puts the break over the first day of teaching
+    # after it: 21 September 2026 is Monday of week 7, a full teaching day.
+    breaks = [r for r in keydates.ranges(events()) if r["name"] == "Teaching break"]
+    assert [r["resumes"] for r in breaks] == ["2026-04-20", "2026-09-21"]
+    assert all(r["end"] < r["resumes"] for r in breaks)
+
+
+def test_an_ends_event_stays_inclusive():
+    # "Semester 1 ends" is the last day of semester, so unlike a return it is
+    # the range's own end and carries no resume date.
+    sem = next(r for r in keydates.ranges(events()) if r["name"] == "Semester 1")
+    assert (sem["start"], sem["end"]) == ("2026-02-23", "2026-05-29")
+    assert sem["resumes"] == ""
 
 
 def test_ranges_pair_an_unmarked_opener_with_its_end():

@@ -62,6 +62,11 @@ of them for what a particular class actually did.
   against the calendar, then go to the timetable or the class summary.
 - **An unknown code returns HTTP 200** with a "page doesn't exist" body. A 200
   is not proof the thing exists; check the body.
+- **The timetable knows about teaching breaks.** If scheduled classes turn up
+  inside a break you worked out from the calendar, your range is wrong, not the
+  timetable — a "Return from ..." date is the first day back, not the last day
+  off. Never tell anyone a scheduled class will not run on the strength of a
+  date range you paired yourself.
 
 ## Working on this repository
 

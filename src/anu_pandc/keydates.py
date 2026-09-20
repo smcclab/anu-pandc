@@ -25,7 +25,7 @@ from __future__ import annotations
 import html
 import logging
 import re
-from datetime import date
+from datetime import date, timedelta
 
 from anu_pandc.http import get
 
@@ -105,16 +105,19 @@ def _normalise(name: str) -> str:
 def _stem(summary: str) -> tuple[str, str | None]:
     """Split a summary into its name and which end of a range it marks.
 
-    "Semester 1 begins" opens a range and "Semester 1 ends" closes it. So does
-    "Return from teaching break", which puts its marker at the front, and
-    "... period 1 begins (two week duration)", which puts a parenthetical after
-    it. "Semester 1 examination period" has no marker at all and is only
-    recognisable as an opener once its "ends" partner turns up.
+    "Semester 1 begins" opens a range and "Semester 1 ends" closes it.
+    "Return from teaching break" also closes one, but puts its marker at the
+    front and means something different: it is the first day *back*, not the
+    last day off, so it is reported as ``"resume"`` and the range it closes
+    ends the day before. "... period 1 begins (two week duration)" puts a
+    parenthetical after the marker. "Semester 1 examination period" has no
+    marker at all and is only recognisable as an opener once its "ends"
+    partner turns up.
     """
     core = re.sub(r"\s*\([^)]*\)\s*$", "", summary).strip()
     low = core.lower()
     if low.startswith("return from "):
-        return core[len("return from "):].strip(), "end"
+        return core[len("return from "):].strip(), "resume"
     for word in _RANGE_OPENERS:
         if low.endswith(" " + word):
             return core[: -len(word)].strip(" -\u2013\u2014"), "start"
@@ -124,8 +127,24 @@ def _stem(summary: str) -> tuple[str, str | None]:
     return summary, None
 
 
+def _day_before(iso: str) -> str:
+    """The day before an ISO date, for closing an exclusive range."""
+    try:
+        return (date.fromisoformat(iso) - timedelta(days=1)).isoformat()
+    except ValueError:
+        return iso
+
+
 def ranges(events: list[dict]) -> list[dict]:
     """Pair the range events up into ``{name, start, end}`` rows.
+
+    ``end`` is always the last day the range covers, inclusive. A range closed
+    by a "Return from ..." event is the reason that needs saying: the published
+    date is the first day back, so the range ends the day before it and the
+    published date is kept in ``resumes``. Treating it as the end instead puts
+    a teaching break over the first day of teaching after it — the 2026 break
+    closes with "Return from teaching break" on 21 September, which is Monday
+    of week 7, not a day off.
 
     An event with no partner stays a single day, because a one-day deadline is
     as real as a range.
@@ -139,21 +158,28 @@ def ranges(events: list[dict]) -> list[dict]:
         key = _normalise(name)
         if edge == "start":
             row = {"name": name, "start": event["date"], "end": "",
-                   "url": event["url"], "single_day": False}
+                   "resumes": "", "url": event["url"], "single_day": False}
             open_rows[key] = row
             out.append(row)
             continue
-        if edge == "end":
+        if edge in ("end", "resume"):
+            closes = event["date"]
+            resumes = ""
+            if edge == "resume":
+                resumes = event["date"]
+                closes = _day_before(event["date"])
             row = open_rows.pop(key, None) or unmarked.pop(key, None)
             if row is not None:
-                row["end"] = event["date"]
+                row["end"] = closes
+                row["resumes"] = resumes
                 row["single_day"] = False
                 continue
-            out.append({"name": name, "start": "", "end": event["date"],
-                        "url": event["url"], "single_day": False})
+            out.append({"name": name, "start": "", "end": closes,
+                        "resumes": resumes, "url": event["url"],
+                        "single_day": False})
             continue
         row = {"name": name, "start": event["date"], "end": event["date"],
-               "url": event["url"], "single_day": True}
+               "resumes": "", "url": event["url"], "single_day": True}
         unmarked[key] = row
         out.append(row)
 
@@ -176,10 +202,15 @@ def to_markdown(events: list[dict], year: str, scraped_at: str,
              "- University-wide dates only. Course assessment dates are in the "
              "class summaries; check the page before relying on a date.", ""]
     if as_ranges:
-        lines += ["| From | To | What |", "|------|----|------|"]
+        lines += ["| From | To | Resumes | What |",
+                  "|------|----|---------|------|"]
         for row in ranges(events):
             to = "" if row["single_day"] else row["end"]
-            lines.append(f"| {row['start']} | {to} | {row['name']} |")
+            lines.append(f"| {row['start']} | {to} | {row.get('resumes', '')} "
+                         f"| {row['name']} |")
+        lines += ["", "To and From are inclusive: To is the last day the range "
+                  "covers. Resumes, where the calendar published one, is the "
+                  "first day back afterwards — it is not part of the range."]
     else:
         lines += ["| Date | Event |", "|------|-------|"]
         for event in events:

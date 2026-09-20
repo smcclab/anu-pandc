@@ -6,6 +6,20 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `calendar --ranges` ended a teaching break on the day teaching resumed. The
+  calendar closes a range two ways and they do not mean the same thing:
+  "Semester 1 ends" is the last day of semester, but "Return from teaching
+  break" is the first day *back*. Both were being written into the same `To`
+  column, so the 2026 Semester 2 break read as 7–21 September when it is
+  7–20, and the week of the 21st — week 7, with lectures, labs and an assessed
+  reflection task in COMP1100 — looked like a week off. A range closed by a
+  return now ends the day before it, and the published date is kept in a new
+  `resumes` field, shown as a column in the Markdown table and in CSV and JSON.
+  Reported by a model that read the table, believed it over the timetable it
+  had also fetched, and advised skipping the week.
+
 ### Added
 
 - `AGENTS.md` at the repository root, where an agent looks before it reads

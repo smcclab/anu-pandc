@@ -194,6 +194,20 @@ The feed works for 2026 (55 events) and 2027 (62), and is served with
 
 - **Every event is a single day.** There is no `DTEND`; a range is published as
   two events, "… begins" and "… ends". Pair them yourself.
+- **"Return from X" is the first day *back*, not the last day off.** The two
+  closing shapes do not mean the same thing: "Semester 1 ends" is inclusive —
+  29 May is the last day of semester — but "Return from teaching break" on
+  21 September 2026 is the Monday teaching *resumes*. Ending the break on it
+  puts a teaching break over a full teaching day. The 2026 Semester 2 break is
+  7–20 September; the week of the 21st is week 7, with lectures, labs and an
+  assessed reflection task. Subtract a day from a "Return from" date before
+  treating it as an end.
+- **If the timetable and your paired calendar range disagree, you have paired
+  it wrongly.** The timetable is generated from the teaching schedule and
+  knows about breaks. Scheduled classes sitting inside what you computed as a
+  break is the symptom of the off-by-one above, not a conflict to resolve in
+  the calendar's favour. Never advise anyone to skip a scheduled class on the
+  strength of a range you paired yourself.
 - **The wording of the pairs drifts.** A break "commences" and you "Return
   from" it — the marker is at the *front* of the closing summary. The
   Semester 1 examination period has no "begins" at all, only an "ends". A

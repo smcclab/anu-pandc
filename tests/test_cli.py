@@ -319,7 +319,9 @@ def test_calendar_ranges_pair_the_begins_and_ends_events():
              body=raw("calendar_2026.ics"), content_type="text/calendar; charset=utf-8")
     r = run("calendar", "--year", "2026", "--ranges", "-f", "csv")
     assert r.exit_code == 0
-    assert "2026-02-23,2026-05-29,Semester 1," in r.stdout
+    assert "2026-02-23,2026-05-29,,Semester 1," in r.stdout
+    # The break ends the day before teaching resumes, and says when that is.
+    assert "2026-09-07,2026-09-20,2026-09-21,Teaching break," in r.stdout
 
 
 @resp.activate

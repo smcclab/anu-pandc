@@ -869,7 +869,8 @@ def calendar_cmd(year, terms, as_ranges, formats, save_dir, force, plain):
               (f" matching {' '.join(terms)}" if terms else ""))
     scraped_at = now_iso()
     rows = keydates.ranges(events) if as_ranges else events
-    fields = ["start", "end", "name", "url"] if as_ranges else keydates.FIELDS
+    fields = (["start", "end", "resumes", "name", "url"] if as_ranges
+              else keydates.FIELDS)
     renders = {
         "md": lambda: keydates.to_markdown(events, year, scraped_at, as_ranges),
         "csv": lambda: rows_to_csv(rows, fields),
