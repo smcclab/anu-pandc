@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from anu_pandc import __version__, codes, http
+from anu_pandc import __version__, codes, http, policy
 from anu_pandc.catalogue import (FIELDS as CATALOGUE_FIELDS, catalogue_rows,
                                  catalogue_to_markdown, fetch_catalogue, teaching_codes)
 from anu_pandc.conveners import (FIELDS as CONVENER_FIELDS, collect as collect_conveners,
@@ -23,6 +23,7 @@ log = logging.getLogger("anu_pandc")
 
 ITEM_FORMATS = ["md", "json"]
 TABLE_FORMATS = ["md", "csv", "json"]
+POLICY_DOC_TYPES = ["Policy", "Procedure", "Standard", "Guideline", "Form"]
 
 
 def _formats(value: tuple[str, ...], default: str = "md") -> list[str]:
@@ -460,6 +461,156 @@ def conveners(from_dir, year, prefix, aliases, formats, output, plain):
         return
     for fmt in formats:
         emit(renders[fmt](), fmt, plain)
+
+
+# ---- policy library ----------------------------------------------------------
+
+
+@cli.group("policy", short_help="ANU Policy Library: policies, procedures, forms.")
+def policy_group():
+    """Read the ANU Policy Library: policies, procedures, standards and forms.
+
+    \b
+    Examples:
+      anu-pandc policy get ANUP_004603
+      anu-pandc policy get "Student assessment (coursework)"
+      anu-pandc policy search "delegated authority"
+      anu-pandc policy list --type Policy -f csv
+    """
+
+
+def _resolve_policy_number(query: str) -> str:
+    """A document number as given, or the best title match for a phrase."""
+    try:
+        return policy.normalise(query)
+    except ValueError:
+        pass
+    rows, _ = policy.search(query)
+    if not rows:
+        _fail(f"nothing in the Policy Library matches {query!r}")
+    exact = [row for row in rows if row["title"].lower() == query.lower()]
+    return (exact or rows)[0]["number"]
+
+
+@policy_group.command("get", short_help="Fetch one policy-library document.")
+@click.argument("queries", metavar="NUMBER-OR-TITLE...", nargs=-1, required=True)
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(ITEM_FORMATS))
+@click.option("--json", "as_json", is_flag=True, help="Shorthand for --format json.")
+@_save_option
+@_force_option
+@_plain_option
+def policy_get(queries, formats, as_json, save_dir, force, plain):
+    """Fetch policy-library documents by number (ANUP_004603) or by title.
+
+    A title is resolved through the library's own search, so a phrase that
+    matches more than one document takes the first hit — pass the number when
+    it matters which.
+    """
+    formats = _formats(formats + (("json",) if as_json else ()))
+    store = Store(save_dir) if save_dir else None
+    errors = 0
+    for query in queries:
+        number = _resolve_policy_number(query)
+        paths = [store.doc_path("policy", number, f) for f in formats] if store else []
+        if store and not force and all(p.exists() for p in paths):
+            status(f"[skip] policy {number}", "dim")
+            continue
+        try:
+            data = policy.fetch_document(number)
+        except Exception as exc:  # noqa: BLE001 - report and continue
+            errors += 1
+            status(f"[error] policy {query}: {exc}", "red")
+            continue
+        scraped_at = now_iso()
+        renders = {"md": lambda: policy.document_to_markdown(data, scraped_at),
+                   "json": lambda: rows_to_json([data])}
+        if store:
+            for fmt, path in zip(formats, paths):
+                store.write(path, renders[fmt]())
+                status(f"→ {path}", "green")
+            store.log(None, f"policy/{number} — {data['url']}")
+        else:
+            for fmt in formats:
+                emit(renders[fmt](), fmt, plain)
+    sys.exit(1 if errors else 0)
+
+
+@policy_group.command("search", short_help="Keyword search of the Policy Library.")
+@click.argument("term")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_plain_option
+def policy_search(term, formats, plain):
+    """Search the Policy Library for TERM.
+
+    The library returns only the first five hits of each document type and says
+    how many there were; when a type is truncated, `policy list --type` has the
+    rest.
+    """
+    formats = _formats(formats)
+    rows, url = policy.search(term)
+    if not rows:
+        _fail(f"nothing in the Policy Library matches {term!r}")
+    truncated = {r["group"]: r["group_total"] for r in rows
+                 if r["group_total"] > sum(1 for x in rows if x["group"] == r["group"])}
+    for group, total in truncated.items():
+        status(f"[truncated] {group}: showing 5 of {total}; "
+               f"`policy list --type {policy.doc_type_of(group)}` for all of them", "yellow")
+    fields = ["number", "title", "group", "contact_area", "url"]
+    renders = {
+        "md": lambda: policy.listing_to_markdown(
+            [dict(r, doc_type=r["group"], topic="") for r in rows],
+            f"Policy Library search: {term}", url, now_iso()),
+        "csv": lambda: rows_to_csv(rows, fields),
+        "json": lambda: rows_to_json(rows),
+    }
+    for fmt in formats:
+        emit(renders[fmt](), fmt, plain)
+
+
+@policy_group.command("list", short_help="List documents in the Policy Library.")
+@click.option("--type", "doc_type", type=click.Choice(POLICY_DOC_TYPES, case_sensitive=False),
+              help="Only this document type. Default: every document in the library.")
+@click.option("--topic", help='Only this topic, e.g. "Students".')
+@click.option("--subtopic", help="Only this subtopic (needs --topic).")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_save_option
+@_plain_option
+def policy_list(doc_type, topic, subtopic, formats, save_dir, plain):
+    """List Policy Library documents, optionally narrowed by type or topic.
+
+    With no filter this is the library's whole A-Z index — every document it
+    publishes, with its number, so anything here can be fetched by `policy get`.
+    """
+    formats = _formats(formats)
+    if doc_type or topic or subtopic:
+        doc_type = doc_type.capitalize() if doc_type else None
+        rows, url = policy.fetch_view_all(doc_type, topic, subtopic)
+        heading = " ".join(filter(None, ["Policy Library:", doc_type, topic, subtopic]))
+    else:
+        rows, url = policy.fetch_index(), policy.TITLE_INDEX_URL
+        heading = "Policy Library: all documents"
+    if not rows:
+        # Topic and subtopic have to match the library's own spelling exactly,
+        # including the ampersands: "Buildings & Grounds", "Access & Use".
+        _fail(f"no documents matched. Asked: {url}")
+    scraped_at = now_iso()
+    fields = ["number", "title", "doc_type", "topic", "audience", "contact_area", "url"]
+    renders = {
+        "md": lambda: policy.listing_to_markdown(rows, heading, url, scraped_at),
+        "csv": lambda: rows_to_csv(rows, fields),
+        "json": lambda: rows_to_json(rows),
+    }
+    if not save_dir:
+        for fmt in formats:
+            emit(renders[fmt](), fmt, plain)
+        return
+    store = Store(save_dir)
+    name = "index" if not (doc_type or topic or subtopic) else \
+        "-".join(filter(None, [doc_type, topic, subtopic])).replace(" ", "")
+    for fmt in formats:
+        path = store.write(store.doc_path("policy", name, fmt), renders[fmt]())
+        status(f"→ {path}  ({len(rows)} documents)", "green")
+    store.log(None, f"policy/{name} — {url}, {len(rows)} documents")
 
 
 # ---- url ---------------------------------------------------------------------

@@ -205,3 +205,67 @@ def test_get_unknown_code_is_an_error_not_a_file(tmp_path):
     assert r.exit_code == 1
     assert "no such page" in r.stderr
     assert not (tmp_path / "2026/courses/COMP9999.md").exists()
+
+
+# ---- the other ANU sources ---------------------------------------------------
+
+POLICY = "https://policies.anu.edu.au"
+
+
+def raw(name: str) -> str:
+    return (FIXTURES / name).read_text(encoding="utf-8")
+
+
+@resp.activate
+def test_policy_get_by_number_prints_the_document():
+    resp.add(resp.GET, f"{POLICY}/ppl/document/ANUP_004603",
+             body=fixture("policy_ANUP_004603"))
+    r = run("policy", "get", "ANUP_004603", "--plain")
+    assert r.exit_code == 0
+    assert r.stdout.startswith("# Policy: Student assessment (coursework)")
+    assert "- **Approved by:** Academic Board" in r.stdout
+
+
+@resp.activate
+def test_policy_get_accepts_a_bare_number():
+    resp.add(resp.GET, f"{POLICY}/ppl/document/ANUP_004603",
+             body=fixture("policy_ANUP_004603"))
+    assert run("policy", "get", "4603", "--plain").exit_code == 0
+
+
+@resp.activate
+def test_policy_get_resolves_a_title_through_search():
+    resp.add(resp.GET, f"{POLICY}/ppl/search_results/index.htm",
+             body=fixture("policy_search_delegated-authority"))
+    resp.add(resp.GET, f"{POLICY}/ppl/document/ANUP_004806",
+             body=fixture("policy_ANUP_004603"))
+    r = run("policy", "get", "Delegations of authority", "--plain")
+    assert r.exit_code == 0
+
+
+@resp.activate
+def test_policy_get_saves_outside_the_year_directories(tmp_path):
+    resp.add(resp.GET, f"{POLICY}/ppl/document/ANUP_004603",
+             body=fixture("policy_ANUP_004603"))
+    run("policy", "get", "ANUP_004603", "--save", str(tmp_path))
+    assert (tmp_path / "policy/ANUP_004603.md").exists()
+    assert "policy/ANUP_004603" in (tmp_path / "scrape-log.md").read_text()
+
+
+@resp.activate
+def test_policy_search_says_when_a_group_is_truncated():
+    resp.add(resp.GET, f"{POLICY}/ppl/search_results/index.htm",
+             body=fixture("policy_search_delegated-authority"))
+    r = run("policy", "search", "delegated authority", "-f", "csv")
+    assert "policy list --type Policy" in r.stderr
+    assert "ANUP_004806" in r.stdout
+
+
+@resp.activate
+def test_policy_list_by_type_asks_for_that_subdoctype():
+    resp.add(resp.GET, f"{POLICY}/ppl/view_all/index.htm",
+             body=fixture("policy_view_all_Policy"))
+    r = run("policy", "list", "--type", "policy", "-f", "csv")
+    assert r.exit_code == 0
+    assert "subdoctype_id=Policy" in resp.calls[0].request.url
+    assert r.stdout.splitlines()[0].startswith("number,title,doc_type")
