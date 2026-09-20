@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from anu_pandc import __version__, codes, http, policy
+from anu_pandc import __version__, codes, http, legislation, policy
 from anu_pandc.catalogue import (FIELDS as CATALOGUE_FIELDS, catalogue_rows,
                                  catalogue_to_markdown, fetch_catalogue, teaching_codes)
 from anu_pandc.conveners import (FIELDS as CONVENER_FIELDS, collect as collect_conveners,
@@ -611,6 +611,152 @@ def policy_list(doc_type, topic, subtopic, formats, save_dir, plain):
         path = store.write(store.doc_path("policy", name, fmt), renders[fmt]())
         status(f"→ {path}  ({len(rows)} documents)", "green")
     store.log(None, f"policy/{name} — {url}, {len(rows)} documents")
+
+
+# ---- legislation -------------------------------------------------------------
+
+
+@cli.group("legislation", short_help="University legislation: Acts, Statutes, Rules, Orders.")
+def legislation_group():
+    """Read University legislation, from ANU's index and the Federal Register.
+
+    ANU's Statutes, Rules and Orders are federal law and are registered on the
+    Federal Register of Legislation, which is where their status and text come
+    from. ANU's own index says which titles apply to the University.
+
+    \b
+    Examples:
+      anu-pandc legislation list
+      anu-pandc legislation get "Coursework Awards Rule"
+      anu-pandc legislation get F2024L00724
+      anu-pandc legislation search "Academic Integrity"
+    """
+
+
+@legislation_group.command("get", short_help="Fetch an instrument's text and status.")
+@click.argument("queries", metavar="ID-OR-NAME...", nargs=-1, required=True)
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(ITEM_FORMATS))
+@click.option("--json", "as_json", is_flag=True, help="Shorthand for --format json.")
+@click.option("--include-repealed", is_flag=True,
+              help="Let a name match something no longer in force.")
+@_save_option
+@_force_option
+@_plain_option
+def legislation_get(queries, formats, as_json, include_repealed, save_dir, force, plain):
+    """Fetch legislation by Register id (F2024L01752) or by name.
+
+    A name matches every version the Register holds of an instrument, including
+    the superseded ones, so the in-force principal version is preferred unless
+    --include-repealed says otherwise.
+    """
+    formats = _formats(formats + (("json",) if as_json else ()))
+    store = Store(save_dir) if save_dir else None
+    errors = 0
+    for query in queries:
+        try:
+            title_id = legislation.resolve(query, in_force_only=not include_repealed)
+        except Exception as exc:  # noqa: BLE001
+            errors += 1
+            status(f"[error] legislation {query}: {exc}", "red")
+            continue
+        paths = [store.doc_path("legislation", title_id, f) for f in formats] if store else []
+        if store and not force and all(p.exists() for p in paths):
+            status(f"[skip] legislation {title_id}", "dim")
+            continue
+        try:
+            data = legislation.fetch_instrument(title_id)
+        except Exception as exc:  # noqa: BLE001
+            errors += 1
+            status(f"[error] legislation {title_id}: {exc}", "red")
+            continue
+        if not data.get("in_force"):
+            status(f"[note] {title_id} is {data.get('status', 'not in force')}", "yellow")
+        scraped_at = now_iso()
+        renders = {"md": lambda: legislation.instrument_to_markdown(data, scraped_at),
+                   "json": lambda: rows_to_json([data])}
+        if store:
+            for fmt, path in zip(formats, paths):
+                store.write(path, renders[fmt]())
+                status(f"→ {path}", "green")
+            store.log(None, f"legislation/{title_id} — {data['url']}")
+        else:
+            for fmt in formats:
+                emit(renders[fmt](), fmt, plain)
+    sys.exit(1 if errors else 0)
+
+
+@legislation_group.command("list", short_help="ANU's index of University legislation.")
+@click.option("--section", help='Only one section: Acts, Statutes, Rules, Orders.')
+@click.option("--resolve", "resolve_ids", is_flag=True,
+              help="Also look up each item's Register id and status (one request each).")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_save_option
+@_plain_option
+def legislation_list(section, resolve_ids, formats, save_dir, plain):
+    """List the legislation ANU publishes as applying to the University.
+
+    The index page carries names and links but no Register ids, so --resolve
+    fetches each item's page to find its id and then its status. That is one
+    request per item; without it the list is names and links only.
+    """
+    formats = _formats(formats)
+    rows = legislation.fetch_anu_index()
+    if section:
+        rows = [r for r in rows if section.lower() in r["section"].lower()]
+    if not rows:
+        _fail("nothing on the ANU legislation index matched")
+    if resolve_ids:
+        for row in rows:
+            try:
+                row["id"] = legislation.resolve_from_anu_page(row["anu_url"])
+                if row["id"]:
+                    found = legislation.summary(row["id"])
+                    row.update({k: found[k] for k in
+                                ("kind", "status", "in_force", "made", "url")})
+            except Exception as exc:  # noqa: BLE001
+                status(f"[error] {row['name']}: {exc}", "red")
+    scraped_at = now_iso()
+    fields = ["section", "name", "id", "kind", "status", "made", "anu_url", "url"]
+    renders = {
+        "md": lambda: legislation.index_to_markdown(rows, scraped_at),
+        "csv": lambda: rows_to_csv(rows, fields),
+        "json": lambda: rows_to_json(rows),
+    }
+    if not save_dir:
+        for fmt in formats:
+            emit(renders[fmt](), fmt, plain)
+        return
+    store = Store(save_dir)
+    for fmt in formats:
+        path = store.write(store.doc_path("legislation", "index", fmt), renders[fmt]())
+        status(f"→ {path}  ({len(rows)} items)", "green")
+    store.log(None, f"legislation/index — {legislation.ANU_INDEX_URL}, {len(rows)} items")
+
+
+@legislation_group.command("search", short_help="Find titles on the Federal Register by name.")
+@click.argument("term")
+@click.option("--include-repealed", is_flag=True, help="Include titles no longer in force.")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_plain_option
+def legislation_search(term, include_repealed, formats, plain):
+    """Search the Federal Register of Legislation for TERM.
+
+    This matches the *name* of a title. The Register's full-text search is not
+    available over its API, so a phrase that appears inside an instrument but
+    not in its name will not be found here.
+    """
+    formats = _formats(formats)
+    titles = legislation.search_titles(term, in_force_only=not include_repealed)
+    if not titles:
+        _fail(f"no titles on the Federal Register match {term!r}")
+    rows = legislation.rows(titles)
+    renders = {
+        "md": lambda: legislation.titles_to_markdown(rows, f"Legislation: {term}", now_iso()),
+        "csv": lambda: rows_to_csv(rows, legislation.FIELDS),
+        "json": lambda: rows_to_json(rows),
+    }
+    for fmt in formats:
+        emit(renders[fmt](), fmt, plain)
 
 
 # ---- url ---------------------------------------------------------------------

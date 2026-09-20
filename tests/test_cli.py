@@ -210,6 +210,7 @@ def test_get_unknown_code_is_an_error_not_a_file(tmp_path):
 # ---- the other ANU sources ---------------------------------------------------
 
 POLICY = "https://policies.anu.edu.au"
+REGISTER_API = "https://api.prod.legislation.gov.au/v1/titles"
 
 
 def raw(name: str) -> str:
@@ -269,3 +270,26 @@ def test_policy_list_by_type_asks_for_that_subdoctype():
     assert r.exit_code == 0
     assert "subdoctype_id=Policy" in resp.calls[0].request.url
     assert r.stdout.splitlines()[0].startswith("number,title,doc_type")
+
+
+@resp.activate
+def test_legislation_get_prints_status_and_text():
+    resp.add(resp.GET, REGISTER_API, json=json.loads(raw("legislation_F2024L01752_title.json")))
+    resp.add(resp.GET,
+             "https://www.legislation.gov.au/F2024L01752/latest/2024-12-24"
+             "/text/original/epub/OEBPS/document_1/document_1.html",
+             body=raw("legislation_F2024L01752_text.html"), content_type="text/html")
+    r = run("legislation", "get", "F2024L01752", "--plain")
+    assert r.exit_code == 0
+    assert "# Coursework Awards Rule 2024" in r.stdout
+    assert "- **Status:** InForce (in force)" in r.stdout
+
+
+@resp.activate
+def test_legislation_list_groups_by_section():
+    resp.add(resp.GET, "https://www.anu.edu.au/about/governance/legislation",
+             body=raw("legislation_anu_index.html"), content_type="text/html; charset=utf-8")
+    r = run("legislation", "list", "--section", "Rules", "--plain")
+    assert r.exit_code == 0
+    assert "## Rules" in r.stdout
+    assert "## Acts" not in r.stdout
