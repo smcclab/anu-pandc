@@ -10,7 +10,7 @@ curriculum question runs into: the Policy Library, University legislation, the
 class timetable and the university calendar.
 
 > **Unofficial.** A tool from the [Sound, Music and Creative Computing Lab
-> (SMCC Lab)](https://smcclab.github.io) in the ANU School of Computing, for
+> (SMCClab)](https://smcclab.github.io) in the ANU School of Computing, for
 > our own curriculum work. It is not an official ANU system and is not
 > endorsed or supported by the Programs & Courses team. It reads the public
 > P&C website and ships no data of its own.
@@ -67,7 +67,7 @@ Python 3.11 or newer. Not on PyPI yet, so install from this repository — with
 [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install git+https://github.com/smcclab/anu-pandc.git@v0.3.0
+uv tool install git+https://github.com/smcclab/anu-pandc.git
 anu-pandc --help
 ```
 
@@ -75,12 +75,12 @@ Or run it without installing anything, which is the easy way to hand it to a
 script or a coding agent:
 
 ```bash
-uvx --from git+https://github.com/smcclab/anu-pandc.git@v0.3.0 anu-pandc get COMP1730 --year 2026
+uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1730 --year 2026
 ```
 
 Or with pip: `pip install git+https://github.com/smcclab/anu-pandc.git`.
 
-Drop the `@v0.3.0` to track `main`. To depend on it from another project, add
+To depend on it from another project, add
 `anu-pandc @ git+https://github.com/smcclab/anu-pandc.git` to your
 `dependencies`.
 
