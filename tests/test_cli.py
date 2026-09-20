@@ -293,3 +293,20 @@ def test_legislation_list_groups_by_section():
     assert r.exit_code == 0
     assert "## Rules" in r.stdout
     assert "## Acts" not in r.stdout
+
+
+@resp.activate
+def test_timetable_prints_activities_and_contact_hours():
+    resp.add(resp.POST, "https://mytimetable.anu.edu.au/even/rest/timetable/subjects",
+             json=json.loads(raw("timetable_COMP3300_2026.json")))
+    r = run("timetable", "COMP3300", "--year", "2026", "--plain")
+    assert r.exit_code == 0
+    assert "## Contact hours for one student" in r.stdout
+    assert "Computer Laboratory" in r.stdout
+
+
+@resp.activate
+def test_timetable_uses_the_odd_instance_for_an_odd_year():
+    resp.add(resp.POST, "https://mytimetable.anu.edu.au/odd/rest/timetable/subjects", json={})
+    r = run("timetable", "COMP3300", "--year", "2025")
+    assert "no scheduled activities" in r.stderr

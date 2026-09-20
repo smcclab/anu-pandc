@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from anu_pandc import __version__, codes, http, legislation, policy
+from anu_pandc import __version__, codes, http, legislation, policy, timetable
 from anu_pandc.catalogue import (FIELDS as CATALOGUE_FIELDS, catalogue_rows,
                                  catalogue_to_markdown, fetch_catalogue, teaching_codes)
 from anu_pandc.conveners import (FIELDS as CONVENER_FIELDS, collect as collect_conveners,
@@ -757,6 +757,69 @@ def legislation_search(term, include_repealed, formats, plain):
     }
     for fmt in formats:
         emit(renders[fmt](), fmt, plain)
+
+
+# ---- timetable ---------------------------------------------------------------
+
+
+@cli.command("timetable", short_help="Scheduled classes from MyTimetable.")
+@click.argument("terms", metavar="TERM...", nargs=-1, required=True)
+@_year_option
+@click.option("--period", "-p", help='Only this teaching period, e.g. "Second Semester".')
+@click.option("--include-clones", is_flag=True,
+              help="Keep the duplicate 'Clone' activities the publisher emits.")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_save_option
+@_force_option
+@_plain_option
+def timetable_cmd(terms, year, period, include_clones, formats, save_dir, force, plain):
+    """Scheduled classes for a course code (or any search TERM) in a year.
+
+    Reads the Allocate+ Web Publisher behind mytimetable.anu.edu.au. It runs
+    one instance per parity of the year, so only the two years those instances
+    hold can be asked about — currently 2025 and 2026.
+
+    This is the scheduled timetable and it changes; it is not evidence of what
+    was delivered, and it does not say who taught. The Markdown output also
+    totals the contact hours one student carries, counting one stream per
+    activity group rather than all the alternatives.
+    """
+    formats = _formats(formats)
+    store = Store(save_dir) if save_dir else None
+    errors = 0
+    for term in terms:
+        term = term.upper() if len(term) == 8 and term[:4].isalpha() else term
+        paths = [store.table_path(year, "timetable", term, f) for f in formats] if store else []
+        if store and not force and all(p.exists() for p in paths):
+            status(f"[skip] timetable {term} {year}", "dim")
+            continue
+        try:
+            payload = timetable.fetch_subjects(term, year)
+        except Exception as exc:  # noqa: BLE001
+            errors += 1
+            status(f"[error] timetable {term}: {exc}", "red")
+            continue
+        rows = timetable.activities(payload, period=period, include_clones=include_clones)
+        if not rows:
+            status(f"[none] no scheduled activities for {term} in {year}"
+                   f"{' (' + period + ')' if period else ''}", "yellow")
+            continue
+        scraped_at = now_iso()
+        table = timetable.rows_for_table(rows)
+        renders = {
+            "md": lambda: timetable.to_markdown(rows, term, year, scraped_at),
+            "csv": lambda: rows_to_csv(table, timetable.FIELDS),
+            "json": lambda: rows_to_json(rows),
+        }
+        if store:
+            for fmt, path in zip(formats, paths):
+                store.write(path, renders[fmt]())
+                status(f"→ {path}  ({len(rows)} activities)", "green")
+            store.log(year, f"timetable-{term} — {timetable.rest_url(year, 'subjects')}")
+        else:
+            for fmt in formats:
+                emit(renders[fmt](), fmt, plain)
+    sys.exit(1 if errors else 0)
 
 
 # ---- url ---------------------------------------------------------------------
