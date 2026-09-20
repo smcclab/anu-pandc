@@ -160,6 +160,15 @@ Other endpoints under `../rest/timetable/`: `locations` and `studentsets`
 
 ### Gotchas
 
+- **`activitiesDays` is the only thing that locates an activity in time.** A
+  row's day and time are a weekly *pattern*; the dates say which weeks it
+  actually runs. A search returns every teaching period of the year at once,
+  so a response with both semesters in it is normal and the period is not
+  implied by the date you are asking about. To answer "what is on in the week
+  of 21 September 2026", filter `activitiesDays` to Mon–Sun around that date
+  and report only what survives — do not read a weekly pattern and assume it
+  applies. Deciding between First and Second Semester by guessing where in the
+  year a date falls is how this goes wrong; the dates are right there.
 - **Count sessions from `activitiesDays`**, not by decoding `week_pattern`.
 - **Drop `activity_type: "Clone"`.** Those duplicate a real slot, carry no
   location, and double every count made over them.

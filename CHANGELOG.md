@@ -6,6 +6,16 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `timetable --week YYYY-MM-DD` — only what runs in the Monday-to-Sunday week
+  around a date. Without it the timetable is a weekly *pattern* covering every
+  teaching period of the year at once, with no dates in it, so "what is on in
+  the week of 21 September" could not be read off the output at all and a
+  reader had to guess which semester a September date belonged to. The table
+  now also carries `first_date` and `last_date` per row, in Markdown, CSV and
+  JSON, so every row says which weeks it actually runs.
+
 ### Fixed
 
 - `calendar --ranges` ended a teaching break on the day teaching resumed. The

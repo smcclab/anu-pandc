@@ -12,7 +12,7 @@ Use the CLI. It needs no checkout:
 ```bash
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1100 --year 2026
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc classes COMP1100 --year 2026
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc timetable COMP1100 --year 2026
+uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc timetable COMP1100 --year 2026 --week 2026-09-21
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc calendar --year 2026 --ranges
 ```
 
@@ -47,6 +47,7 @@ Getting this wrong is the commonest way to answer confidently and wrongly.
 | What is this course? What does it require? Who convenes it? | P&C course page, then the class summary |
 | What is the *real* assessment schedule, with due dates? | the class summary, not the course page's "indicative assessment" |
 | When and where does the class meet? | MyTimetable — scheduled, not evidence of delivery |
+| What is on in one particular week? | MyTimetable with `--week YYYY-MM-DD`; a whole-year timetable is a weekly *pattern* across every teaching period and cannot answer it |
 | What week is it? Census, teaching breaks, exams, results? | the university calendar |
 | How does the University apply a rule? | the Policy Library |
 | What *must* happen, and who may decide it? | legislation — Statutes, Rules, Orders |

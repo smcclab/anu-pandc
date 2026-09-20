@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from datetime import date
 from pathlib import Path
 
 import click
@@ -775,11 +776,15 @@ def legislation_search(term, include_repealed, formats, plain):
 @click.option("--period", "-p", help='Only this teaching period, e.g. "Second Semester".')
 @click.option("--include-clones", is_flag=True,
               help="Keep the duplicate 'Clone' activities the publisher emits.")
+@click.option("--week", "week", metavar="DATE",
+              help="Only what runs in the Mon-Sun week containing DATE "
+                   "(YYYY-MM-DD). Answers 'what is on this week'.")
 @click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
 @_save_option
 @_force_option
 @_plain_option
-def timetable_cmd(terms, year, period, include_clones, formats, save_dir, force, plain):
+def timetable_cmd(terms, year, period, include_clones, week, formats, save_dir,
+                  force, plain):
     """Scheduled classes for a course code (or any search TERM) in a year.
 
     Reads the Allocate+ Web Publisher behind mytimetable.anu.edu.au. It runs
@@ -807,6 +812,17 @@ def timetable_cmd(terms, year, period, include_clones, formats, save_dir, force,
             status(f"[error] timetable {term}: {exc}", "red")
             continue
         rows = timetable.activities(payload, period=period, include_clones=include_clones)
+        if week:
+            try:
+                start, end = timetable.week_of(date.fromisoformat(week))
+            except ValueError:
+                raise click.BadParameter(
+                    f"--week wants a YYYY-MM-DD date, not {week!r}") from None
+            rows = timetable.sessions_between(rows, start, end)
+            if not rows:
+                status(f"[none] {term}: nothing scheduled in the week of "
+                       f"{start.isoformat()}. That week may be a teaching break, "
+                       f"or outside the teaching period.", "yellow")
         if not rows:
             status(f"[none] no scheduled activities for {term} in {year}"
                    f"{' (' + period + ')' if period else ''}", "yellow")

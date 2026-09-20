@@ -51,6 +51,7 @@ commonest way to answer confidently and wrongly:
 | What is this course, what does it require, who convenes it? | P&C | the first file |
 | When and where does the class actually meet? | MyTimetable | the second |
 | What week is it? Census, breaks, exams, results? | University calendar | the second |
+| What is on in *one particular week*? | the timetable, narrowed to that week | the second |
 | What must happen, and who may decide it? | Legislation, then the Policy Library | the second |
 
 A question with a date in it ("this week", "is it census yet", "what's on in
@@ -184,6 +185,7 @@ anu-pandc legislation get "Coursework Awards Rule"
 # When things happen, and when the class actually meets.
 anu-pandc calendar --year 2026 --ranges
 anu-pandc timetable COMP3300 --year 2026
+anu-pandc timetable COMP1100 --year 2026 --week 2026-09-21   # just that week
 ```
 
 Markdown is rendered nicely when printing to a terminal; pipe it or pass
@@ -212,7 +214,7 @@ And, for the sources beyond P&C:
 | `legislation list` | ANU's own index of the legislation that applies to the University, grouped into Acts, Statutes, Rules and Orders. `--resolve` adds each item's Register id and status. |
 | `legislation get ID-OR-NAME...` | An instrument's status, commencement, what authorises it, and its full text from the Federal Register. |
 | `legislation search TERM` | Titles on the Register whose *name* matches. |
-| `timetable TERM... --year Y` | Scheduled classes from MyTimetable, plus the contact hours one student carries. |
+| `timetable TERM... --year Y` | Scheduled classes from MyTimetable, plus the contact hours one student carries. `--week YYYY-MM-DD` narrows to the Mon–Sun week around a date, which is what "what's on this week" needs — without it the table is a weekly pattern covering every teaching period of the year. |
 | `calendar --year Y` | The university calendar: census dates, teaching breaks, exam periods, results, public holidays. `--ranges` pairs the begins/ends events; `--find WORD` narrows. |
 
 Global options: `--rate SECONDS` (pause between requests, default 0.5),

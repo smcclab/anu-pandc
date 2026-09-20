@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from anu_pandc.http import post
 
@@ -34,7 +34,8 @@ _COURSE_CODE = re.compile(r"(?<![A-Z0-9])[A-Z]{4}\d{4}(?![A-Z0-9])")
 DAY_ORDER = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
 
 FIELDS = ["course", "class_number", "period", "group", "activity", "type", "day",
-          "start", "end", "duration_min", "sessions", "location", "staff", "co_taught"]
+          "start", "end", "duration_min", "sessions", "first_date", "last_date",
+          "location", "staff", "co_taught"]
 
 
 class NoSuchYear(Exception):
@@ -171,6 +172,12 @@ def sessions_between(rows: list[dict], start: date, end: date) -> list[dict]:
     return out
 
 
+def week_of(day: date) -> tuple[date, date]:
+    """The Monday-to-Sunday week containing a date."""
+    monday = day - timedelta(days=day.weekday())
+    return monday, monday + timedelta(days=6)
+
+
 def rows_for_table(rows: list[dict]) -> list[dict]:
     return [{k: row.get(k, "") for k in FIELDS} for row in rows]
 
@@ -186,12 +193,15 @@ def to_markdown(rows: list[dict], term: str, year: str, scraped_at: str) -> str:
     if managers:
         lines += [f"- Timetable contact: {', '.join(managers)}", ""]
 
-    lines += ["| Course | Class | Period | Group | Act | Type | Day | Start | End | Sessions | Location | Co-taught |",
-              "|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    for row in sorted(rows, key=lambda r: (r["course"], r["period"], r["group"],
-                                           DAY_ORDER.get(r["day"], 9), r["start"])):
+    lines += ["| Course | Class | Period | Group | Act | Type | Day | Start | End "
+              "| Sessions | First | Last | Location | Co-taught |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for row in sorted(rows_for_table(rows),
+                      key=lambda r: (r["course"], r["period"], r["group"],
+                                     DAY_ORDER.get(r["day"], 9), r["start"])):
         lines.append("| {course} | {class_number} | {period} | {group} | {activity} | {type} "
-                     "| {day} | {start} | {end} | {sessions} | {location} | {co_taught} |".format(**row))
+                     "| {day} | {start} | {end} | {sessions} | {first_date} "
+                     "| {last_date} | {location} | {co_taught} |".format(**row))
 
     load = student_load(rows)
     if load:

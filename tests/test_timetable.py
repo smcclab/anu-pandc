@@ -78,3 +78,33 @@ def test_markdown_reports_contact_hours_and_says_what_it_is_not():
     rendered = timetable.to_markdown(rows, "COMP3300", "2026", "2026-01-01T00:00:00Z")
     assert "## Contact hours for one student" in rendered
     assert "Scheduled, not delivered" in rendered
+
+
+def test_week_of_is_the_monday_to_sunday_around_a_date():
+    # Monday 21 September 2026 is the start of its own week, not the end.
+    assert timetable.week_of(date(2026, 9, 21)) == (date(2026, 9, 21), date(2026, 9, 27))
+    assert timetable.week_of(date(2026, 9, 25)) == (date(2026, 9, 21), date(2026, 9, 27))
+
+
+def test_a_week_filter_keeps_only_that_week_and_dates_every_row():
+    # The failure this exists for: the full table is a weekly pattern with no
+    # dates in it, so "what is on in the week of X" cannot be read off it and a
+    # reader picks the wrong teaching period. Narrowed to a week, every row
+    # carries the dates it actually runs.
+    rows = timetable.activities(payload(), "COMP3300")
+    lecture = next(r for r in rows if r["group"] == "LecA")
+    start, end = timetable.week_of(date.fromisoformat(lecture["first_date"]))
+    within = timetable.sessions_between(rows, start, end)
+    assert within, "the week of a lecture's first session should not be empty"
+    for row in within:
+        assert row["first_date"] and row["last_date"]
+        assert all(start.isoformat() <= d <= end.isoformat() for d in row["dates"])
+
+
+def test_the_table_carries_the_dates_each_row_runs():
+    rows = timetable.activities(payload(), "COMP3300")
+    table = timetable.rows_for_table(rows)
+    assert "first_date" in timetable.FIELDS and "last_date" in timetable.FIELDS
+    assert all(r["first_date"] for r in table)
+    rendered = timetable.to_markdown(rows, "COMP3300", "2026", "2026-01-01T00:00:00Z")
+    assert rows[0]["first_date"] in rendered
