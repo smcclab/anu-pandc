@@ -40,23 +40,40 @@ def test_absolute():
 def test_forbidden_from_origin_names_anu():
     resp.add(
         resp.GET,
-        "https://example.com",
+        "https://programsandcourses.anu.edu.au/",
         status=403,
         headers={"Request-Context": "appId=cid-v1:x"},
     )
     with pytest.raises(http.Forbidden) as caught:
-        http.fetch_page("https://example.com")
+        http.fetch_page("https://programsandcourses.anu.edu.au/")
     assert "ANU refused it" in str(caught.value)
 
 
 @resp.activate
 def test_forbidden_without_origin_headers_blames_the_middle():
-    resp.add(resp.GET, "https://example.com", status=403)
+    resp.add(resp.GET, "https://programsandcourses.anu.edu.au/", status=403)
     with pytest.raises(http.Forbidden) as caught:
-        http.fetch_page("https://example.com")
+        http.fetch_page("https://programsandcourses.anu.edu.au/")
     message = str(caught.value)
     assert "egress allow-list" in message
     assert "programsandcourses.anu.edu.au" in message
+
+
+@resp.activate
+def test_forbidden_names_the_host_actually_refused():
+    resp.add(resp.GET, "https://policies.anu.edu.au/ppl", status=403)
+    with pytest.raises(http.Forbidden) as caught:
+        http.fetch_page("https://policies.anu.edu.au/ppl")
+    assert "policies.anu.edu.au" in str(caught.value)
+
+
+@resp.activate
+def test_post_uses_the_same_session_and_rate_limit():
+    resp.add(resp.POST, "https://mytimetable.anu.edu.au/even/rest/timetable/subjects",
+             json={"ok": True})
+    assert http.post("https://mytimetable.anu.edu.au/even/rest/timetable/subjects",
+                     data={"search-term": "COMP3300"}).json() == {"ok": True}
+    assert resp.calls[0].request.headers["User-Agent"].startswith("anu-pandc/")
 
 
 def test_user_agent_can_be_overridden_by_env(monkeypatch):

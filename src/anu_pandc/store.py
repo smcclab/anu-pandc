@@ -9,7 +9,19 @@
     DIR/<year>/catalogue-<PREFIX>.md       every course under a subject prefix
     DIR/<year>/offerings-<PREFIX>.csv      planned sittings, by offering year
     DIR/<year>/course-codes.txt            union of course codes seen so far
+    DIR/<year>/timetable-<TERM>.md         scheduled classes from MyTimetable
+    DIR/<year>/calendar.md                 the university calendar for that year
     DIR/<year>/scrape-log.md               append-only log of what was fetched
+
+Two sources have no year, because the documents themselves have none: a policy
+has an effective date and a piece of legislation has a commencement date, and
+only the current version is published. They sit above the year directories::
+
+    DIR/policy/ANUP_004603.md              one policy-library document
+    DIR/policy/index.md                    a listing of the library
+    DIR/legislation/F2024L01752.md         one Act, Statute, Rule or Order
+    DIR/legislation/index.md               ANU's index of University legislation
+    DIR/scrape-log.md                      the log for both of those
 
 JSON output uses the same paths with a ``.json`` extension. The layout is
 deliberately flat and greppable: a year of a school's curriculum is a few
@@ -52,6 +64,14 @@ class Store:
     def table_path(self, year: str, name: str, prefix: str, fmt: str) -> Path:
         return self.year_dir(year) / f"{name}-{prefix}.{fmt}"
 
+    def year_file_path(self, year: str, name: str, fmt: str) -> Path:
+        """A single per-year file, such as the calendar."""
+        return self.year_dir(year) / f"{name}.{fmt}"
+
+    def doc_path(self, area: str, name: str, fmt: str = "md") -> Path:
+        """A yearless document: ``policy/ANUP_004603.md``, ``legislation/F2024L01752.md``."""
+        return self.root / area / f"{name}.{fmt}"
+
     def codes_path(self, year: str) -> Path:
         return self.year_dir(year) / "course-codes.txt"
 
@@ -65,8 +85,9 @@ class Store:
         path.write_text(text, encoding="utf-8")
         return path
 
-    def log(self, year: str, entry: str) -> None:
-        path = self.log_path(year)
+    def log(self, year: str | None, entry: str) -> None:
+        """Append to a year's log, or to the tree's own when there is no year."""
+        path = self.log_path(year) if year else self.root / "scrape-log.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(f"- {now_iso()} {entry}\n")
