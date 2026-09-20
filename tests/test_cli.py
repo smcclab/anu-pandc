@@ -310,3 +310,24 @@ def test_timetable_uses_the_odd_instance_for_an_odd_year():
     resp.add(resp.POST, "https://mytimetable.anu.edu.au/odd/rest/timetable/subjects", json={})
     r = run("timetable", "COMP3300", "--year", "2025")
     assert "no scheduled activities" in r.stderr
+
+
+@resp.activate
+def test_calendar_ranges_pair_the_begins_and_ends_events():
+    resp.add(resp.GET,
+             "https://www.anu.edu.au/directories/university-calendar/2026/calendar.ics",
+             body=raw("calendar_2026.ics"), content_type="text/calendar; charset=utf-8")
+    r = run("calendar", "--year", "2026", "--ranges", "-f", "csv")
+    assert r.exit_code == 0
+    assert "2026-02-23,2026-05-29,Semester 1," in r.stdout
+
+
+@resp.activate
+def test_calendar_find_narrows_to_matching_events():
+    resp.add(resp.GET,
+             "https://www.anu.edu.au/directories/university-calendar/2026/calendar.ics",
+             body=raw("calendar_2026.ics"), content_type="text/calendar; charset=utf-8")
+    r = run("calendar", "--year", "2026", "--find", "census", "-f", "csv")
+    rows = r.stdout.strip().splitlines()[1:]
+    assert len(rows) == 2
+    assert all("census" in row for row in rows)

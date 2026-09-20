@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from anu_pandc import __version__, codes, http, legislation, policy, timetable
+from anu_pandc import __version__, codes, http, keydates, legislation, policy, timetable
 from anu_pandc.catalogue import (FIELDS as CATALOGUE_FIELDS, catalogue_rows,
                                  catalogue_to_markdown, fetch_catalogue, teaching_codes)
 from anu_pandc.conveners import (FIELDS as CONVENER_FIELDS, collect as collect_conveners,
@@ -820,6 +820,62 @@ def timetable_cmd(terms, year, period, include_clones, formats, save_dir, force,
             for fmt in formats:
                 emit(renders[fmt](), fmt, plain)
     sys.exit(1 if errors else 0)
+
+
+# ---- calendar ----------------------------------------------------------------
+
+
+@cli.command("calendar", short_help="University calendar: census, breaks, exams.")
+@_year_option
+@click.option("--find", "terms", multiple=True, metavar="WORD",
+              help="Only events whose summary contains all of these words.")
+@click.option("--ranges", "as_ranges", is_flag=True,
+              help="Pair the begins/ends events into date ranges.")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_save_option
+@_force_option
+@_plain_option
+def calendar_cmd(year, terms, as_ranges, formats, save_dir, force, plain):
+    """The university calendar for a year: census dates, breaks, exam periods.
+
+    Read from the iCalendar feed, which is near-live. Every event in it is a
+    single day and ranges are published as separate begins/ends events, which
+    --ranges pairs back up. Cite the calendar page, not the feed.
+
+    \b
+    Examples:
+      anu-pandc calendar --year 2026
+      anu-pandc calendar --year 2026 --ranges
+      anu-pandc calendar --year 2026 --find census
+    """
+    formats = _formats(formats)
+    store = Store(save_dir) if save_dir else None
+    paths = [store.year_file_path(year, "calendar", f) for f in formats] if store else []
+    if store and not force and all(p.exists() for p in paths):
+        status(f"[skip] calendar {year}", "dim")
+        return
+    events = keydates.fetch_calendar(year)
+    if terms:
+        events = keydates.find(events, *terms)
+    if not events:
+        _fail(f"no events in the {year} calendar" +
+              (f" matching {' '.join(terms)}" if terms else ""))
+    scraped_at = now_iso()
+    rows = keydates.ranges(events) if as_ranges else events
+    fields = ["start", "end", "name", "url"] if as_ranges else keydates.FIELDS
+    renders = {
+        "md": lambda: keydates.to_markdown(events, year, scraped_at, as_ranges),
+        "csv": lambda: rows_to_csv(rows, fields),
+        "json": lambda: rows_to_json(rows),
+    }
+    if store:
+        for fmt, path in zip(formats, paths):
+            store.write(path, renders[fmt]())
+            status(f"→ {path}  ({len(events)} events)", "green")
+        store.log(year, f"calendar — {keydates.page_url(year)}")
+    else:
+        for fmt in formats:
+            emit(renders[fmt](), fmt, plain)
 
 
 # ---- url ---------------------------------------------------------------------

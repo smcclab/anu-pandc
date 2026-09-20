@@ -1,0 +1,391 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-WR-CALNAME;VALUE=TEXT:
+PRODID:-//Drupal iCal API//EN
+BEGIN:VEVENT
+2026-01-01 12:00:00 AEDT
+DTSTART:20260101T000000Z
+SUMMARY:Summer Session begins
+
+URL:https://www.anu.edu.au/summer-session-begins-11
+END:VEVENT
+BEGIN:VEVENT
+2026-01-01 12:00:00 AEDT
+DTSTART:20260101T000000Z
+SUMMARY:New Year&#039;s Day public holiday
+
+URL:https://www.anu.edu.au/new-years-day-public-holiday-5
+END:VEVENT
+BEGIN:VEVENT
+2026-01-02 12:00:00 AEDT
+DTSTART:20260102T000000Z
+SUMMARY:University offices re-open
+
+URL:https://www.anu.edu.au/university-offices-re-open-7
+END:VEVENT
+BEGIN:VEVENT
+2026-01-26 12:00:00 AEDT
+DTSTART:20260126T000000Z
+SUMMARY:Australia Day public holiday
+
+URL:https://www.anu.edu.au/australia-day-public-holiday-4
+END:VEVENT
+BEGIN:VEVENT
+2026-01-28 12:00:00 AEDT
+DTSTART:20260128T000000Z
+SUMMARY:2026 Graduations
+
+URL:https://www.anu.edu.au/2026-graduations
+END:VEVENT
+BEGIN:VEVENT
+2026-01-31 12:00:00 AEDT
+DTSTART:20260131T000000Z
+SUMMARY:Recommended date to re-enrol in courses for the academic year
+
+URL:https://www.anu.edu.au/recommended-date-to-re-enrol-in-courses-for-the-academic-year-5
+END:VEVENT
+BEGIN:VEVENT
+2026-02-16 12:00:00 AEDT
+DTSTART:20260216T000000Z
+SUMMARY:ANU Orientation Week
+
+URL:https://www.anu.edu.au/anu-orientation-week-9
+END:VEVENT
+BEGIN:VEVENT
+2026-02-16 12:00:00 AEDT
+DTSTART:20260216T000000Z
+SUMMARY:Semester 2 of prior year deferred and supplementary final examination period begins
+
+URL:https://www.anu.edu.au/semester-2-of-prior-year-deferred-and-supplementary-final-examination-period-begins
+END:VEVENT
+BEGIN:VEVENT
+2026-02-20 12:00:00 AEDT
+DTSTART:20260220T000000Z
+SUMMARY:Semester 2 of prior year deferred and supplementary final examination period ends
+
+URL:https://www.anu.edu.au/semester-2-of-prior-year-deferred-and-supplementary-final-examination-period-ends
+END:VEVENT
+BEGIN:VEVENT
+2026-02-23 12:00:00 AEDT
+DTSTART:20260223T000000Z
+SUMMARY:Semester 1 begins
+
+URL:https://www.anu.edu.au/semester-1-begins-8
+END:VEVENT
+BEGIN:VEVENT
+2026-03-02 12:00:00 AEDT
+DTSTART:20260302T000000Z
+SUMMARY:Last day to add Semester 1 courses on ANUHub
+
+URL:https://www.anu.edu.au/last-day-to-add-semester-1-courses-on-anuhub
+END:VEVENT
+BEGIN:VEVENT
+2026-03-09 12:00:00 AEDT
+DTSTART:20260309T000000Z
+SUMMARY:Canberra Day public holiday
+
+URL:https://www.anu.edu.au/canberra-day-public-holiday-6
+END:VEVENT
+BEGIN:VEVENT
+2026-03-13 12:00:00 AEDT
+DTSTART:20260313T000000Z
+SUMMARY:Due date for payment of tuition fees and up-front HECS for Semester 1
+
+URL:https://www.anu.edu.au/due-date-for-payment-of-tuition-fees-and-up-front-hecs-for-semester-1-3
+END:VEVENT
+BEGIN:VEVENT
+2026-03-28 12:00:00 AEDT
+DTSTART:20260328T000000Z
+SUMMARY:ANU Open Day
+
+URL:https://www.anu.edu.au/anu-open-day
+END:VEVENT
+BEGIN:VEVENT
+2026-03-31 12:00:00 AEDT
+DTSTART:20260331T000000Z
+SUMMARY:Summer Session ends
+
+URL:https://www.anu.edu.au/summer-session-ends-10
+END:VEVENT
+BEGIN:VEVENT
+2026-03-31 12:00:00 AEDT
+DTSTART:20260331T000000Z
+SUMMARY:Semester 1 census date
+
+URL:https://www.anu.edu.au/semester-1-census-date-11
+END:VEVENT
+BEGIN:VEVENT
+2026-04-01 12:00:00 AEDT
+DTSTART:20260401T000000Z
+SUMMARY:Autumn Session begins
+
+URL:https://www.anu.edu.au/autumn-session-begins-11
+END:VEVENT
+BEGIN:VEVENT
+2026-04-03 12:00:00 AEDT
+DTSTART:20260403T000000Z
+SUMMARY:Good Friday public holiday
+
+URL:https://www.anu.edu.au/good-friday-public-holiday-5
+END:VEVENT
+BEGIN:VEVENT
+2026-04-06 12:00:00 AEST
+DTSTART:20260406T000000Z
+SUMMARY:Teaching break commences
+
+URL:https://www.anu.edu.au/teaching-break-commences-9
+END:VEVENT
+BEGIN:VEVENT
+2026-04-06 12:00:00 AEST
+DTSTART:20260406T000000Z
+SUMMARY:Easter Monday public holiday
+
+URL:https://www.anu.edu.au/easter-monday-public-holiday-4
+END:VEVENT
+BEGIN:VEVENT
+2026-04-20 12:00:00 AEST
+DTSTART:20260420T000000Z
+SUMMARY:Return from teaching break
+
+URL:https://www.anu.edu.au/return-from-teaching-break-11
+END:VEVENT
+BEGIN:VEVENT
+2026-04-27 12:00:00 AEST
+DTSTART:20260427T000000Z
+SUMMARY:ANZAC Day public holiday
+
+URL:https://www.anu.edu.au/anzac-day-public-holiday-5
+END:VEVENT
+BEGIN:VEVENT
+2026-05-08 12:00:00 AEST
+DTSTART:20260508T000000Z
+SUMMARY:Last day to drop Semester 1 courses without failure
+
+URL:https://www.anu.edu.au/last-day-to-drop-semester-1-courses-without-failure
+END:VEVENT
+BEGIN:VEVENT
+2026-05-29 12:00:00 AEST
+DTSTART:20260529T000000Z
+SUMMARY:Semester 1 ends
+
+URL:https://www.anu.edu.au/semester-1-ends-4
+END:VEVENT
+BEGIN:VEVENT
+2026-05-29 12:00:00 AEST
+DTSTART:20260529T000000Z
+SUMMARY:Last day to drop Semester 1 courses with failure
+
+URL:https://www.anu.edu.au/last-day-to-drop-semester-1-courses-with-failure
+END:VEVENT
+BEGIN:VEVENT
+2026-06-01 12:00:00 AEST
+DTSTART:20260601T000000Z
+SUMMARY:Reconciliation Day public holiday
+
+URL:https://www.anu.edu.au/reconciliation-day-public-holiday-6
+END:VEVENT
+BEGIN:VEVENT
+2026-06-04 12:00:00 AEST
+DTSTART:20260604T000000Z
+SUMMARY:Semester 1 examination period
+
+URL:https://www.anu.edu.au/semester-1-examination-period-2
+END:VEVENT
+BEGIN:VEVENT
+2026-06-08 12:00:00 AEST
+DTSTART:20260608T000000Z
+SUMMARY:King&#039;s Birthday public holiday
+
+URL:https://www.anu.edu.au/kings-birthday-public-holiday
+END:VEVENT
+BEGIN:VEVENT
+2026-06-20 12:00:00 AEST
+DTSTART:20260620T000000Z
+SUMMARY:Semester 1 examination period ends
+
+URL:https://www.anu.edu.au/semester-1-examination-period-ends-7
+END:VEVENT
+BEGIN:VEVENT
+2026-06-30 12:00:00 AEST
+DTSTART:20260630T000000Z
+SUMMARY:Autumn Session ends
+
+URL:https://www.anu.edu.au/autumn-session-ends-10
+END:VEVENT
+BEGIN:VEVENT
+2026-06-30 12:00:00 AEST
+DTSTART:20260630T000000Z
+SUMMARY:Recommended date for continuing students to enrol in Semester 2 courses
+
+URL:https://www.anu.edu.au/recommended-date-for-continuing-students-to-enrol-in-semester-2-courses-2
+END:VEVENT
+BEGIN:VEVENT
+2026-07-01 12:00:00 AEST
+DTSTART:20260701T000000Z
+SUMMARY:Winter Session begins
+
+URL:https://www.anu.edu.au/winter-session-begins-11
+END:VEVENT
+BEGIN:VEVENT
+2026-07-08 12:00:00 AEST
+DTSTART:20260708T000000Z
+SUMMARY:Results from Semester 1 published
+
+URL:https://www.anu.edu.au/results-from-semester-1-published-2
+END:VEVENT
+BEGIN:VEVENT
+2026-07-20 12:00:00 AEST
+DTSTART:20260720T000000Z
+SUMMARY:ANU Orientation Week
+
+URL:https://www.anu.edu.au/anu-orientation-week-10
+END:VEVENT
+BEGIN:VEVENT
+2026-07-20 12:00:00 AEST
+DTSTART:20260720T000000Z
+SUMMARY:Deferred/Supplementary Exam Period
+
+URL:https://www.anu.edu.au/deferredsupplementary-exam-period
+END:VEVENT
+BEGIN:VEVENT
+2026-07-27 12:00:00 AEST
+DTSTART:20260727T000000Z
+SUMMARY:Semester 2 begins
+
+URL:https://www.anu.edu.au/semester-2-begins-7
+END:VEVENT
+BEGIN:VEVENT
+2026-08-03 12:00:00 AEST
+DTSTART:20260803T000000Z
+SUMMARY:Last day to add Semester 2 courses
+
+URL:https://www.anu.edu.au/last-day-to-add-semester-2-courses-0
+END:VEVENT
+BEGIN:VEVENT
+2026-08-14 12:00:00 AEST
+DTSTART:20260814T000000Z
+SUMMARY:Due date for payment of tuition fees and up-front HECS for Semester 2
+
+URL:https://www.anu.edu.au/due-date-for-payment-of-tuition-fees-and-up-front-hecs-for-semester-2-3
+END:VEVENT
+BEGIN:VEVENT
+2026-08-31 12:00:00 AEST
+DTSTART:20260831T000000Z
+SUMMARY:Semester 2 census date
+
+URL:https://www.anu.edu.au/semester-2-census-date-11
+END:VEVENT
+BEGIN:VEVENT
+2026-09-07 12:00:00 AEST
+DTSTART:20260907T000000Z
+SUMMARY:Teaching break commences
+
+URL:https://www.anu.edu.au/teaching-break-commences-10
+END:VEVENT
+BEGIN:VEVENT
+2026-09-21 12:00:00 AEST
+DTSTART:20260921T000000Z
+SUMMARY:Return from teaching break
+
+URL:https://www.anu.edu.au/return-from-teaching-break-12
+END:VEVENT
+BEGIN:VEVENT
+2026-09-30 12:00:00 AEST
+DTSTART:20260930T000000Z
+SUMMARY:Winter Session ends
+
+URL:https://www.anu.edu.au/winter-session-ends-10
+END:VEVENT
+BEGIN:VEVENT
+2026-10-01 12:00:00 AEST
+DTSTART:20261001T000000Z
+SUMMARY:Spring Session commences
+
+URL:https://www.anu.edu.au/spring-session-commences-4
+END:VEVENT
+BEGIN:VEVENT
+2026-10-05 12:00:00 AEDT
+DTSTART:20261005T000000Z
+SUMMARY:Labour Day public holiday
+
+URL:https://www.anu.edu.au/labour-day-public-holiday-5
+END:VEVENT
+BEGIN:VEVENT
+2026-10-09 12:00:00 AEDT
+DTSTART:20261009T000000Z
+SUMMARY:Last day to drop Semester 2 courses without failure
+
+URL:https://www.anu.edu.au/last-day-to-drop-semester-2-courses-without-failure
+END:VEVENT
+BEGIN:VEVENT
+2026-10-30 12:00:00 AEDT
+DTSTART:20261030T000000Z
+SUMMARY:Semester 2 ends
+
+URL:https://www.anu.edu.au/semester-2-ends-3
+END:VEVENT
+BEGIN:VEVENT
+2026-10-30 12:00:00 AEDT
+DTSTART:20261030T000000Z
+SUMMARY:Last day to drop Semester 2 courses with failure
+
+URL:https://www.anu.edu.au/last-day-to-drop-semester-2-courses-with-failure
+END:VEVENT
+BEGIN:VEVENT
+2026-11-05 12:00:00 AEDT
+DTSTART:20261105T000000Z
+SUMMARY:Semester 2 examination period begins
+
+URL:https://www.anu.edu.au/semester-2-examination-period-begins-7
+END:VEVENT
+BEGIN:VEVENT
+2026-11-21 12:00:00 AEDT
+DTSTART:20261121T000000Z
+SUMMARY:Semester 2 examination period ends
+
+URL:https://www.anu.edu.au/semester-2-examination-period-ends-7
+END:VEVENT
+BEGIN:VEVENT
+2026-11-23 12:00:00 AEDT
+DTSTART:20261123T000000Z
+SUMMARY:New - Semester 2 deferred examination period begins
+
+URL:https://www.anu.edu.au/new-semester-2-deferred-examination-period-begins-0
+END:VEVENT
+BEGIN:VEVENT
+2026-12-04 12:00:00 AEDT
+DTSTART:20261204T000000Z
+SUMMARY:New – Semester 2 deferred examination period ends
+
+URL:https://www.anu.edu.au/new-semester-2-deferred-examination-period-ends-0
+END:VEVENT
+BEGIN:VEVENT
+2026-12-09 12:00:00 AEDT
+DTSTART:20261209T000000Z
+SUMMARY:Results from Semester 2 published
+
+URL:https://www.anu.edu.au/results-from-semester-2-published-2
+END:VEVENT
+BEGIN:VEVENT
+2026-12-25 12:00:00 AEDT
+DTSTART:20261225T000000Z
+SUMMARY:Christmas Day public holiday
+
+URL:https://www.anu.edu.au/christmas-day-public-holiday-5
+END:VEVENT
+BEGIN:VEVENT
+2026-12-26 12:00:00 AEDT
+DTSTART:20261226T000000Z
+SUMMARY:Boxing Day public holiday
+
+URL:https://www.anu.edu.au/boxing-day-public-holiday-4
+END:VEVENT
+BEGIN:VEVENT
+2026-12-31 12:00:00 AEDT
+DTSTART:20261231T000000Z
+SUMMARY:Spring Session ends
+
+URL:https://www.anu.edu.au/spring-session-ends-10
+END:VEVENT
+END:VCALENDAR
