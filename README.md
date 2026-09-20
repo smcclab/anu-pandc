@@ -4,7 +4,10 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A command-line interface to [ANU Programs & Courses](https://programsandcourses.anu.edu.au).
+A command-line interface to [ANU Programs &
+Courses](https://programsandcourses.anu.edu.au) and the other ANU sources a
+curriculum question runs into: the Policy Library, University legislation, the
+class timetable and the university calendar.
 
 > **Unofficial.** A tool from the [Sound, Music and Creative Computing Lab
 > (SMCC Lab)](https://smcclab.github.io) in the ANU School of Computing, for
@@ -19,6 +22,12 @@ school's curriculum as a tree of small files you can grep, diff and commit.
 It also fetches per-class summary pages (convener, dates, real assessment
 schedule), lists every course under a subject prefix from the catalogue search
 API, and extracts planned offerings for future years before P&C publishes them.
+
+Beyond P&C it reads four more sources, because a question about coursework
+rarely stays inside one of them. What a course *must* do comes from
+legislation; how the University applies that comes from the Policy Library;
+when it happens comes from the university calendar; and where the class meets
+comes from the timetable.
 
 ## Install
 
@@ -53,17 +62,29 @@ to zero against the live site.
 
 ## Running it elsewhere (sandboxes, CI, agents)
 
-The tool needs outbound HTTPS to two hosts: `github.com` to install it, and
-`programsandcourses.anu.edu.au` to read anything. Sandboxes with an egress
-allow-list commonly permit the first and refuse the second, which surfaces as a
-403 on the first fetch.
+The tool needs outbound HTTPS to `github.com` to install it, and to the host
+behind whichever source you are reading. Sandboxes with an egress allow-list
+commonly permit the first and refuse the rest, which surfaces as a 403 on the
+first fetch.
 
-A 403 now says which end refused you. If the response carries P&C's own Azure
-headers, ANU said no; if it carries none of them, something between you and ANU
-did — add `programsandcourses.anu.edu.au` to the allow-list. The site is a plain
-Azure App Service with no bot-detection layer in front of it, and it answers
-`curl`, `python-requests` and browser User-Agents alike, so a blanket 403 is
-almost always the network in between.
+| Host | Read for |
+|------|----------|
+| `programsandcourses.anu.edu.au` | programs, courses, class summaries |
+| `policies.anu.edu.au` | the Policy Library |
+| `mytimetable.anu.edu.au` | the class timetable |
+| `www.anu.edu.au` | the university calendar, the legislation index |
+| `api.prod.legislation.gov.au` | Federal Register metadata |
+| `www.legislation.gov.au` | Federal Register document text |
+
+Only P&C is needed for the P&C commands; the others are only touched by the
+command that reads them.
+
+A 403 now says which end refused you, and names the host it was refused for.
+If the response carries the site's own Azure headers, ANU said no; if it
+carries none of them, something between you and ANU did — add that host to the
+allow-list. P&C is a plain Azure App Service with no bot-detection layer in
+front of it, and it answers `curl`, `python-requests` and browser User-Agents
+alike, so a blanket 403 is almost always the network in between.
 
 To check by hand from the environment in question:
 
@@ -87,10 +108,11 @@ and the parsers in `anu_pandc.parse` — works with no network at all, so an
 agent that cannot reach ANU can still work from data someone else committed.
 
 If the *tool* is blocked but the agent has a web-fetch or browser tool that is
-not, it can read P&C directly over plain HTTPS:
-[docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) gives it the
-URL shapes and the recipes. That is a last resort for sandboxes — anywhere the
-CLI runs, use the CLI.
+not, it can read these sites directly over plain HTTPS:
+[docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) and
+[docs/reading-anu-sources-directly.md](docs/reading-anu-sources-directly.md)
+give it the URL shapes and the recipes. That is a last resort for sandboxes —
+anywhere the CLI runs, use the CLI.
 
 ## Quick start
 
@@ -121,6 +143,15 @@ anu-pandc offerings --year 2027 --from ./data --prefix COMP --save ./data
 
 # Who convened what, from the saved class pages.
 anu-pandc conveners --from ./data --prefix COMP -o conveners.csv
+
+# The policy and the legislation behind an assessment question.
+anu-pandc policy search "assessment extension"
+anu-pandc policy get "Student assessment (coursework)"
+anu-pandc legislation get "Coursework Awards Rule"
+
+# When things happen, and when the class actually meets.
+anu-pandc calendar --year 2026 --ranges
+anu-pandc timetable COMP3300 --year 2026
 ```
 
 Markdown is rendered nicely when printing to a terminal; pipe it or pass
@@ -139,6 +170,19 @@ redirect.
 | `conveners --from DIR` | Convener and lecturer per saved class. `--aliases FILE` to merge name variants. |
 | `url CODE... --year Y` | Just print the P&C URLs. |
 
+And, for the sources beyond P&C:
+
+| Command | What it does |
+|---------|--------------|
+| `policy get NUMBER-OR-TITLE...` | One Policy Library document — body, governance metadata (effective date, responsible officer, approving body, the legislation it is made under) and related documents. A title is resolved through the library's search. |
+| `policy search TERM` | Keyword search. Says when a document type is truncated, and which `policy list --type` has the rest. |
+| `policy list` | Every document in the library, or `--type Policy` / `--topic Students` for a slice. |
+| `legislation list` | ANU's own index of the legislation that applies to the University, grouped into Acts, Statutes, Rules and Orders. `--resolve` adds each item's Register id and status. |
+| `legislation get ID-OR-NAME...` | An instrument's status, commencement, what authorises it, and its full text from the Federal Register. |
+| `legislation search TERM` | Titles on the Register whose *name* matches. |
+| `timetable TERM... --year Y` | Scheduled classes from MyTimetable, plus the contact hours one student carries. |
+| `calendar --year Y` | The university calendar: census dates, teaching breaks, exam periods, results, public holidays. `--ranges` pairs the begins/ends events; `--find WORD` narrows. |
+
 Global options: `--rate SECONDS` (pause between requests, default 0.5),
 `-v` to log every fetch, `-q` for errors only.
 
@@ -154,8 +198,23 @@ DIR/2026/
   classes/COMP1100-FirstSemester-3695.md
   catalogue-COMP.md            all COMP courses that year (code, title, career, units, sessions)
   offerings-COMP.csv           planned sittings for the 2026 offering year
+  timetable-COMP3300.md        scheduled classes and contact hours
+  calendar.md                  the university calendar for that year
   course-codes.txt             union of every course code seen so far
   scrape-log.md                append-only record of what was fetched when
+```
+
+Policy documents and legislation have no year — a policy has an effective date
+and an instrument has a commencement date, and only the current version is
+published — so they sit above the year directories:
+
+```
+DIR/
+  policy/ANUP_004603.md        one Policy Library document
+  policy/index.md              a listing of the library
+  legislation/F2024L01752.md   one Act, Statute, Rule or Order
+  legislation/index.md         ANU's index of University legislation
+  scrape-log.md                the log for both of those
 ```
 
 Pass `-f json` (or both `-f md -f json`) to `get`, `courses` and `classes` to
@@ -179,6 +238,45 @@ enrol dates, description, learning outcomes, assessment summary table with due
 dates and LO mapping, per-task detail, examinations, participation, late-
 submission and extension policies, class schedule, resources, and tutorial
 registration.
+
+**Policy Library documents**: the document body as Markdown — with its clause
+numbering intact, which matters because a policy cites its own clauses — plus
+document type and number, effective and next-review dates, responsible officer,
+approving body, contact area, the legislation it is made under, and the
+procedures and forms related to it.
+
+**Legislation**: status and whether it is in force, making and commencement
+dates, compilation number, the instrument that authorises it, and the full text
+from the Federal Register's EPUB.
+
+**Timetable**: one row per scheduled activity — group, stream, type, day, time,
+duration, room, session count from the explicit date list, and the co-taught
+course codes — plus contact hours for one student, counting one stream per
+activity group rather than all the alternatives.
+
+**University calendar**: every event, and the begins/ends pairs reassembled
+into date ranges.
+
+## Notes on the other sources
+
+- A policy's clause numbers live in `<ol start="...">` attributes, not in the
+  text. Cross-references like "in accordance with Clause 73" only line up
+  because the parser reads them.
+- Policy Library search shows five hits per document type and says how many
+  there were; `policy list --type` has the rest.
+- The Federal Register's `/latest/text` URL is a JavaScript shell. The document
+  text is in the EPUB, at a URL built from the version's start date, which is
+  why fetching an instrument is two requests.
+- A legislation name matches every version ever made of it, most of them
+  repealed. `legislation get` prefers the in-force principal version and says
+  so when what it found is not in force.
+- MyTimetable runs one instance per parity of the year — currently 2025 and
+  2026 — and has no year parameter, so no other year can be read from it.
+- The timetable is the *scheduled* one. It changes, it does not say who taught,
+  and it is not evidence that anything was delivered.
+- Calendar events are all single days; ranges are published as separate
+  begins/ends events with wording that drifts between years. `--ranges` pairs
+  them. Cite the calendar page, not the feed.
 
 ## Notes on P&C behaviour
 
@@ -227,6 +325,12 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
   teaching period a question is actually about. Written for an agent or chat
   that cannot run this CLI. Point one at the [raw
   file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md).
+- [docs/reading-anu-sources-directly.md](docs/reading-anu-sources-directly.md) —
+  the same fallback for the four sources beyond P&C: which source answers which
+  kind of question, the URL shapes for the Policy Library, the Federal Register,
+  MyTimetable and the university calendar, and the quirks that make each of them
+  easy to read wrongly. [Raw
+  file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md).
 - [docs/pc-api.md](docs/pc-api.md) — the undocumented JSON endpoints behind the
   P&C catalogue search, what they return, and the quirks worth knowing (the
   page size cap, which server-side filters silently do nothing, how far back

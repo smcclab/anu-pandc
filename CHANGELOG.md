@@ -6,6 +6,56 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Four more ANU sources, on the grounds that a coursework question rarely
+  stays inside Programs & Courses. What a course must do is in legislation,
+  how the University applies that is in the Policy Library, when it happens is
+  in the university calendar, and where the class meets is in the timetable.
+
+  - `policy get|search|list` — the ANU Policy Library. A document comes back
+    with its body as Markdown and the governance metadata that decides whether
+    it still binds anyone: effective and next-review dates, responsible
+    officer, approving body, and the legislation it is made under. Clause
+    numbering is preserved, because a policy cites its own clauses and the
+    numbers live in `<ol start=...>` rather than in the text.
+  - `legislation list|get|search` — University legislation, from ANU's index
+    of what applies and the Federal Register of Legislation for status and
+    text. Fetching an instrument is two requests: the Register's `/latest/text`
+    URL is a JavaScript shell, and the document is in the EPUB at a URL built
+    from the version's start date.
+  - `timetable TERM... --year Y` — scheduled classes from the Allocate+ Web
+    Publisher, with contact hours for one student counted one stream per
+    activity group rather than all the alternatives.
+  - `calendar --year Y` — census dates, teaching breaks, exam periods, results
+    and public holidays from the university calendar feed, with `--ranges` to
+    pair the begins/ends events back into ranges.
+
+- `docs/reading-anu-sources-directly.md`, the companion to
+  `reading-pandc-directly.md` for those four sources: which one answers which
+  kind of question, the URL shapes, and the quirks that make each easy to read
+  wrongly.
+
+- `anu_pandc.parse.html_md`, a small HTML-to-Markdown converter for the prose
+  documents the new sources serve, where the structure is the content rather
+  than a set of named fields.
+
+### Changed
+
+- `http` is no longer specific to Programs & Courses. A 403 names the host it
+  was actually refused for, `post` and `fetch_json` join `get` and
+  `fetch_page` on the same session and rate limit, and `HOSTS` lists every site
+  the tool reads for anyone writing an egress allow-list.
+
+- `fetch_page` hands the response bytes to BeautifulSoup when the server
+  declares no charset, so the document's own declaration is used. The Federal
+  Register serves its text that way, and the previous ISO-8859-1 fallback
+  turned every em dash in an instrument into mojibake.
+
+- A saved tree gained `<year>/timetable-<TERM>.*` and `<year>/calendar.*`, plus
+  `policy/` and `legislation/` directories above the year directories for the
+  documents that have no year.
+
 ## [0.2.0] — 2026-09-17
 
 ### Added

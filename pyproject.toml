@@ -1,13 +1,13 @@
 [project]
 name = "anu-pandc"
 version = "0.2.0"
-description = "A command-line interface to ANU Programs & Courses: programs, majors/minors/specialisations, courses, class summaries and the course catalogue, as Markdown, JSON or CSV."
+description = "A command-line interface to ANU curriculum data: Programs & Courses, the Policy Library, University legislation, the class timetable and the university calendar, as Markdown, JSON or CSV."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [{ name = "Charles Martin", email = "cpm@charlesmartin.au" }]
-keywords = ["anu", "curriculum", "programs-and-courses", "higher-education", "cli"]
+keywords = ["anu", "curriculum", "programs-and-courses", "policy", "legislation", "timetable", "higher-education", "cli"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",

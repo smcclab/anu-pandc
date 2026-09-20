@@ -68,13 +68,20 @@ def cli(rate, verbose, quiet):
     Point it at any program, major/minor/specialisation or course code and a
     year. Print the page as Markdown or JSON, or save a whole tree of them.
 
+    It also reads the other ANU sources a curriculum question runs into: the
+    Policy Library, University legislation on the Federal Register, the
+    published class timetable and the university calendar.
+
     \b
     Examples:
       anu-pandc get COMP1730 --year 2026
-      anu-pandc get BCOMP --year 2026 --json
       anu-pandc get BCOMP --year 2026 --save ./data --recursive
       anu-pandc catalogue COMP --year 2026 --save ./data
       anu-pandc classes COMP1730 --year 2026
+      anu-pandc policy get "Student assessment (coursework)"
+      anu-pandc legislation get "Coursework Awards Rule"
+      anu-pandc timetable COMP3300 --year 2026
+      anu-pandc calendar --year 2026 --ranges
     """
     if rate is not None:
         http.rate_limit_seconds = rate
