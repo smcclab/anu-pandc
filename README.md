@@ -29,6 +29,36 @@ legislation; how the University applies that comes from the Policy Library;
 when it happens comes from the university calendar; and where the class meets
 comes from the timetable.
 
+## If you are an agent or chat without a shell
+
+Stop here. Everything below this section is a command-line tool you cannot
+run. Fetch these two files and follow them instead — they are written for you,
+and they have the URL shapes, the parsing traps and the etiquette:
+
+- **Programs & Courses** — courses, programs, majors/minors, class summaries,
+  who is convening something, and how to work out which year and teaching
+  period a question is actually about:
+  <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md>
+- **The other four sources** — the Policy Library, University legislation, the
+  class timetable and the university calendar:
+  <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md>
+
+Which one you need depends on the question, and getting that wrong is the
+commonest way to answer confidently and wrongly:
+
+| The question | The source | The file |
+|--------------|-----------|----------|
+| What is this course, what does it require, who convenes it? | P&C | the first file |
+| When and where does the class actually meet? | MyTimetable | the second |
+| What week is it? Census, breaks, exams, results? | University calendar | the second |
+| What must happen, and who may decide it? | Legislation, then the Policy Library | the second |
+
+A question with a date in it ("this week", "is it census yet", "what's on in
+September") is a **calendar** question before it is anything else — resolve the
+date against the calendar first, then go to the timetable or the class summary.
+Course pages are year-scoped, so resolve the year explicitly before you fetch
+anything.
+
 ## Install
 
 Python 3.11 or newer. Not on PyPI yet, so install from this repository — with
@@ -109,8 +139,8 @@ agent that cannot reach ANU can still work from data someone else committed.
 
 If the *tool* is blocked but the agent has a web-fetch or browser tool that is
 not, it can read these sites directly over plain HTTPS:
-[docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) and
-[docs/reading-anu-sources-directly.md](docs/reading-anu-sources-directly.md)
+[docs/reading-pandc-directly.md](https://github.com/smcclab/anu-pandc/blob/main/docs/reading-pandc-directly.md) and
+[docs/reading-anu-sources-directly.md](https://github.com/smcclab/anu-pandc/blob/main/docs/reading-anu-sources-directly.md)
 give it the URL shapes and the recipes. That is a last resort for sandboxes —
 anywhere the CLI runs, use the CLI.
 
@@ -317,7 +347,7 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
 
 ## Further reading
 
-- [docs/reading-pandc-directly.md](docs/reading-pandc-directly.md) — the
+- [docs/reading-pandc-directly.md](https://github.com/smcclab/anu-pandc/blob/main/docs/reading-pandc-directly.md) — the
   fallback for sandboxed agents that cannot reach ANU through this tool: how to
   read P&C with nothing but a web-fetch tool — the URL shapes for courses, programs,
   subplans and class summaries, how to find who is convening something, how to
@@ -325,13 +355,13 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
   teaching period a question is actually about. Written for an agent or chat
   that cannot run this CLI. Point one at the [raw
   file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md).
-- [docs/reading-anu-sources-directly.md](docs/reading-anu-sources-directly.md) —
+- [docs/reading-anu-sources-directly.md](https://github.com/smcclab/anu-pandc/blob/main/docs/reading-anu-sources-directly.md) —
   the same fallback for the four sources beyond P&C: which source answers which
   kind of question, the URL shapes for the Policy Library, the Federal Register,
   MyTimetable and the university calendar, and the quirks that make each of them
   easy to read wrongly. [Raw
   file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md).
-- [docs/pc-api.md](docs/pc-api.md) — the undocumented JSON endpoints behind the
+- [docs/pc-api.md](https://github.com/smcclab/anu-pandc/blob/main/docs/pc-api.md) — the undocumented JSON endpoints behind the
   P&C catalogue search, what they return, and the quirks worth knowing (the
   page size cap, which server-side filters silently do nothing, how far back
   `SelectedYear` goes).

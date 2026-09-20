@@ -6,6 +6,27 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `AGENTS.md` at the repository root, where an agent looks before it reads
+  anything else. It splits on whether there is a shell: `uvx` one-liners if
+  there is, the raw URLs of the three `docs/` files if there is not, and in
+  both cases a table of which source answers which kind of question.
+
+### Fixed
+
+- The README led a model that cannot run the CLI to a 404. Its links to
+  `docs/` were relative, so an agent handed the repository URL and reading the
+  raw Markdown built `github.com/smcclab/anu-pandc/docs/…` — which does not
+  exist — rather than the `blob/main` path a rendered link resolves to. Those
+  links are absolute now.
+
+- The README also buried the answer for such a model. Everything above
+  "Further reading" is a command line it cannot use, and the two documents
+  written for it were named on the second-to-last line of a 343-line file. A
+  section near the top now sends it straight to them, and says that a question
+  with a date in it is a calendar question before it is a timetable one.
+
 ## [0.3.0] — 2026-09-20
 
 ### Added
