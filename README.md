@@ -12,8 +12,8 @@ class timetable and the university calendar.
 > **Unofficial.** A tool from the [Sound, Music and Creative Computing Lab
 > (SMCClab)](https://smcclab.github.io) in the ANU School of Computing, for
 > our own curriculum work. It is not an official ANU system and is not
-> endorsed or supported by the Programs & Courses team. It reads the public
-> P&C website and ships no data of its own.
+> endorsed or supported by ANU. It reads the public
+> ANU website converting data into a convenient format and ships no data of its own.
 
 Point it at any program, major/minor/specialisation or course code and a year.
 It prints the page as clean Markdown (or JSON), or saves a whole year of a
