@@ -316,3 +316,19 @@ def test_comp4011_topic_rendered_in_markdown():
     data = parse_course(soup("course_COMP4011_2026"), "COMP4011", "https://x")
     md = course_to_markdown(data, "2026-01-01T00:00:00Z")
     assert "class 9011) — Software Verification using Proof Assistant;" in md
+
+
+def test_comp1730_fees_band_eftsl_and_tuition():
+    fees = parse_course(soup("course_COMP1730"), "COMP1730", "u")["fees"]
+    assert fees["band"] == "2"
+    assert fees["eftsl"] == "0.12500"
+    assert fees["domestic"] == [{"year": "2026", "amount": 5520}]
+    assert fees["international"] == [{"year": "2026", "amount": 7020}]
+
+
+def test_markdown_has_fees_section():
+    data = parse_course(soup("course_COMP1730"), "COMP1730", "u")
+    md = course_to_markdown(data, "2026-01-01T00:00:00Z")
+    assert "## Fees" in md
+    assert "- **Domestic fee-paying:** 2026 $5,520" in md
+    assert "- **Student contribution band (CSP):** 2" in md

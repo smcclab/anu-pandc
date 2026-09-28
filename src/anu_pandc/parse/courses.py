@@ -254,12 +254,54 @@ def _get_assessment(soup: BeautifulSoup) -> list[dict]:
     return items
 
 
+def _get_fees(soup: BeautifulSoup) -> dict:
+    """The Fees tab: contribution band, EFTSL, and fee-paying tuition by year.
+
+    A Commonwealth supported place pays by band, at a rate the Australian
+    Government sets; the page gives the band, not the dollar amount. Domestic
+    and international fee-paying students get a per-year tuition table. The
+    page says fee information is for the current year only, so the years in
+    it are the page's own year, not a schedule.
+    """
+    fees: dict = {"band": "", "eftsl": "", "domestic": [], "international": []}
+    dl = soup.find("dl", class_="student-contribution-band")
+    if dl:
+        for dt in dl.find_all("dt"):
+            if "contribution band" in dt.get_text(strip=True).lower():
+                dd = dt.find_next_sibling("dd")
+                if dd:
+                    fees["band"] = dd.get_text(strip=True)
+    heading = soup.find(id="fees")
+    section = heading.parent if heading else None
+    if section:
+        for table in section.find_all("table", class_="table-fees"):
+            if table.find_parent(id="indicative-fees"):
+                continue
+            row = table.select_one("tbody tr")
+            cells = [td.get_text(strip=True) for td in row.find_all("td")] if row else []
+            if len(cells) >= 2:
+                fees["eftsl"] = cells[1]
+            break
+    for kind in ("domestic", "international"):
+        tab = soup.find(id=f"indicative-fees__{kind}")
+        if not tab:
+            continue
+        for tr in tab.select("tbody tr"):
+            cells = [td.get_text(strip=True) for td in tr.find_all("td")]
+            if len(cells) < 2:
+                continue
+            amount = re.sub(r"[^\d]", "", cells[1])
+            fees[kind].append({"year": cells[0], "amount": int(amount) if amount else None})
+    return fees
+
+
 def parse_course(soup: BeautifulSoup, code: str, url: str) -> dict:
     """
     Parse an ANU course page into a structured dict.
 
     Returns keys: code, url, title, units, level, prerequisites,
-    incompatibilities, description, learning_outcomes, assessment.
+    incompatibilities, description, learning_outcomes, assessment,
+    offerings, fees.
     """
     title = _get_title(soup)
     units = _get_units(soup)
@@ -271,6 +313,7 @@ def parse_course(soup: BeautifulSoup, code: str, url: str) -> dict:
     learning_outcomes = _get_learning_outcomes(soup)
     assessment = _get_assessment(soup)
     offerings = _get_offerings(soup)
+    fees = _get_fees(soup)
 
     return {
         "code": code,
@@ -287,6 +330,7 @@ def parse_course(soup: BeautifulSoup, code: str, url: str) -> dict:
         "learning_outcomes": learning_outcomes,
         "assessment": assessment,
         "offerings": offerings,
+        "fees": fees,
     }
 
 
@@ -378,5 +422,22 @@ def course_to_markdown(data: dict, scraped_at: str) -> str:
             weight_str = f"{weight}%" if weight else ""
             lines.append(f"| {task} | {weight_str} |")
         lines.append("")
+
+    fees = data.get("fees") or {}
+    fee_lines = []
+    if fees.get("band"):
+        fee_lines.append(f"- **Student contribution band (CSP):** {fees['band']} "
+                         "— the amount is set by the Australian Government")
+    for kind, label in (("domestic", "Domestic fee-paying"),
+                        ("international", "International fee-paying")):
+        amounts = [f"{f['year']} ${f['amount']:,}" for f in fees.get(kind, [])
+                   if f.get("amount") is not None]
+        if amounts:
+            fee_lines.append(f"- **{label}:** {'; '.join(amounts)}")
+    if fees.get("eftsl"):
+        fee_lines.append(f"- **EFTSL:** {fees['eftsl']}")
+    if fee_lines:
+        lines += ["## Fees", "", *fee_lines,
+                  "- Fee information on P&C is for the current year only.", ""]
 
     return "\n".join(lines)

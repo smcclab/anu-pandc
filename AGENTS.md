@@ -57,6 +57,11 @@ Getting this wrong is the commonest way to answer confidently and wrongly.
 Legislation beats policy, policy beats procedure, and a class summary beats all
 of them for what a particular class actually did.
 
+School course websites (such as `comp.anu.edu.au/courses/<code>/`) are **not**
+official. They can be years out of date or not in use at all. The class
+summary is the only official listing of what is in a course; use a course
+website only where it clearly agrees with the class summary.
+
 ## Two traps worth knowing before you fetch anything
 
 - **Resolve the year and teaching period explicitly.** Course pages are

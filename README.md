@@ -268,7 +268,9 @@ write `.json` files with the same names. Existing files are skipped unless
 (split heuristically, with the raw requisite text preserved), co-taught
 codes, description, learning outcomes, indicative assessment with weights, and
 the "Offered in" table (year, session, mode, class number, summary link, and
-the advertised topic title for special-topics shells such as COMP4011).
+the advertised topic title for special-topics shells such as COMP4011), and
+the Fees tab (student contribution band, EFTSL, and domestic and international
+fee-paying tuition for the page's year).
 
 **Program and subplan pages**: title, total units, introduction, learning
 outcomes, requirement groups as tables of courses, and the list of
@@ -386,6 +388,11 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
   MyTimetable, the exam timetable and the university calendar, and the quirks that make each of them
   easy to read wrongly. [Raw
   file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md).
+- [docs/anu-information-landscape.md](https://github.com/smcclab/anu-pandc/blob/main/docs/anu-information-landscape.md) —
+  a survey of where ANU publishes student-facing course information, how the
+  seven sources fit together (and where they don't), and the practical
+  problems with each: how each system handles time, pages that don't exist
+  until released, and what would help most.
 - [docs/pc-api.md](https://github.com/smcclab/anu-pandc/blob/main/docs/pc-api.md) — the undocumented JSON endpoints behind the
   P&C catalogue search, what they return, and the quirks worth knowing (the
   page size cap, which server-side filters silently do nothing, how far back

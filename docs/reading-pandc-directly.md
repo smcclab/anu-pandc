@@ -199,6 +199,12 @@ Start from today's date, then:
   survive, but the un-prefixed `/course/{CODE}/{Period}/{Number}` form that
   older links and older saved data use now redirects to an error page. Use the
   year-prefixed form.
+- **An official account of a course from anywhere else.** School course
+  websites (the School of Computing's are at `comp.anu.edu.au/courses/<code>/`)
+  are non-official. They can be out of date without warning, unused, or
+  unattended for years. The class summary is the only official listing of
+  what is in a course. Don't quote a course website unless it clearly agrees
+  with the class summary for the same year and period.
 - **Graduate attribute tags** — course pages carry a Graduate Attributes field
   that neither this document's recipes nor the CLI's parsers capture; read it
   off the HTML if you need it.

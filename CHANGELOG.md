@@ -16,6 +16,14 @@ All notable changes to this project are recorded here. The format follows
   The site's one-row-per-room table is folded into one row per exam, and
   co-taught courses sharing a combined exam code are all named on it.
   `exams.anu.edu.au` joins the hosts an egress allow-list needs.
+- Course pages now parse the Fees tab: the student contribution band, EFTSL,
+  and domestic and international fee-paying tuition, in the JSON as `fees` and
+  in the Markdown as a `## Fees` section.
+- `docs/anu-information-landscape.md` — where ANU publishes student-facing
+  course information, how the sources fit together, and the practical
+  problems with each. It and the agent docs now say that school course
+  websites are non-official: the class summary is the only official listing
+  of what is in a course.
 
 ## [0.3.1] — 2026-09-20
 
