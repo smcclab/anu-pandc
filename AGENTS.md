@@ -10,14 +10,16 @@ the university calendar. Unofficial; a tool from the SMCC Lab in the ANU School 
 Use the CLI. It needs no checkout:
 
 ```bash
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1100 --year 2026
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc classes COMP1100 --year 2026
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc timetable COMP1100 --year 2026 --week 2026-09-21
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc calendar --year 2026 --ranges
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc exams COMP1100
+uvx anu-pandc get COMP1100 --year 2026
+uvx anu-pandc classes COMP1100 --year 2026
+uvx anu-pandc timetable COMP1100 --year 2026 --week 2026-09-21
+uvx anu-pandc calendar --year 2026 --ranges
+uvx anu-pandc exams COMP1100
 ```
 
-`--help` lists the rest. Read
+If PyPI is blocked but GitHub is not, `uvx --from
+git+https://github.com/smcclab/anu-pandc.git anu-pandc ...` installs the same
+tool from the repository. `--help` lists the rest. Read
 [README.md](https://github.com/smcclab/anu-pandc/blob/main/README.md) for the
 full command set, and its "Running it elsewhere" section if a fetch returns 403
 — in a sandbox with an egress allow-list that is almost always your own gateway

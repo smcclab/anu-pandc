@@ -10,7 +10,7 @@ re-derives parsers that already exist, and the CLI is the right answer wherever
 it runs:
 
 ```bash
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc policy get ANUP_004603
+uvx anu-pandc policy get ANUP_004603
 ```
 
 Everything below was checked against the live sites on 2026-09-20 (the exam

@@ -66,11 +66,11 @@ teaching break" is the first day *back*.
 
 ## Install
 
-Python 3.11 or newer. Not on PyPI yet, so install from this repository — with
-[uv](https://docs.astral.sh/uv/):
+Python 3.11 or newer. It is on [PyPI](https://pypi.org/project/anu-pandc/);
+with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install git+https://github.com/smcclab/anu-pandc.git
+uv tool install anu-pandc
 anu-pandc --help
 ```
 
@@ -78,14 +78,14 @@ Or run it without installing anything, which is the easy way to hand it to a
 script or a coding agent:
 
 ```bash
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1730 --year 2026
+uvx anu-pandc get COMP1730 --year 2026
 ```
 
-Or with pip: `pip install git+https://github.com/smcclab/anu-pandc.git`.
+Or with pip: `pip install anu-pandc`. To depend on it from another project,
+add `anu-pandc` to your `dependencies`.
 
-To depend on it from another project, add
-`anu-pandc @ git+https://github.com/smcclab/anu-pandc.git` to your
-`dependencies`.
+For the latest unreleased changes, install from this repository instead:
+`uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc ...`.
 
 ## Status
 
@@ -97,8 +97,9 @@ to zero against the live site.
 
 ## Running it elsewhere (sandboxes, CI, agents)
 
-The tool needs outbound HTTPS to `github.com` to install it, and to the host
-behind whichever source you are reading. Sandboxes with an egress allow-list
+The tool needs outbound HTTPS to install it — `pypi.org` and
+`files.pythonhosted.org`, or `github.com` when installing from the repository —
+and to the host behind whichever source you are reading. Sandboxes with an egress allow-list
 commonly permit the first and refuse the rest, which surfaces as a 403 on the
 first fetch.
 
@@ -132,7 +133,8 @@ A 200 with `Request-Context` and `ARRAffinity` headers means the path is clear.
 A 403 carrying an `x-deny-reason` header (for example `host_not_allowed`) is
 your own gateway refusing the host, and no header, proxy or DNS change will get
 around it — the host has to be allow-listed. Claude Code's cloud sandboxes
-refuse it this way today, while GitHub is permitted, so installing works and
+refuse it this way today, while GitHub is permitted, so installing from the
+repository works and
 fetching does not.
 
 `ANU_PANDC_USER_AGENT` overrides the identifying User-Agent if you need to say

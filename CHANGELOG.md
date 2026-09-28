@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-09-28
+
 ### Added
 
 - `exams` — exam dates, times, reading and writing time, and rooms from the
@@ -26,6 +28,12 @@ All notable changes to this project are recorded here. The format follows
   of what is in a course.
 - Publishing a GitHub release now publishes the package to PyPI, through a
   trusted-publishing workflow.
+
+### Changed
+
+- The package is on PyPI, so the README and agent docs install it with
+  `uvx anu-pandc` / `pip install anu-pandc`. Installing from the repository
+  still works, for unreleased changes or where PyPI is blocked.
 
 ## [0.3.1] — 2026-09-20
 
@@ -181,7 +189,8 @@ analysis repository into a standalone package.
 - A saved-tree layout (`DIR/<year>/…`) designed to be grepped, diffed and
   committed, with `--force` to re-fetch and a `scrape-log.md` audit trail.
 
-[Unreleased]: https://github.com/smcclab/anu-pandc/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/smcclab/anu-pandc/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.4.0
 [0.3.1]: https://github.com/smcclab/anu-pandc/releases/tag/v0.3.1
 [0.3.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.3.0
 [0.2.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.2.0

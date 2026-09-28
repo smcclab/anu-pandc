@@ -14,7 +14,7 @@ not-found detection, and no `offerings`/`conveners` aggregation. On a machine
 with a checkout or `uvx`, the CLI is the right answer even for a single lookup:
 
 ```bash
-uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1730 --year 2026
+uvx anu-pandc get COMP1730 --year 2026
 ```
 
 So: try the CLI first, and only fall back here once a fetch has actually been
