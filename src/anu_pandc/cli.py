@@ -9,7 +9,8 @@ from pathlib import Path
 import click
 from rich.logging import RichHandler
 
-from anu_pandc import __version__, codes, http, keydates, legislation, policy, timetable
+from anu_pandc import (__version__, codes, exams, http, keydates, legislation, policy,
+                       timetable)
 from anu_pandc.catalogue import (FIELDS as CATALOGUE_FIELDS, catalogue_rows,
                                  catalogue_to_markdown, fetch_catalogue, teaching_codes)
 from anu_pandc.conveners import (FIELDS as CONVENER_FIELDS, collect as collect_conveners,
@@ -71,7 +72,7 @@ def cli(rate, verbose, quiet):
 
     It also reads the other ANU sources a curriculum question runs into: the
     Policy Library, University legislation on the Federal Register, the
-    published class timetable and the university calendar.
+    published class timetable, the exam timetable and the university calendar.
 
     \b
     Examples:
@@ -82,6 +83,7 @@ def cli(rate, verbose, quiet):
       anu-pandc policy get "Student assessment (coursework)"
       anu-pandc legislation get "Coursework Awards Rule"
       anu-pandc timetable COMP3300 --year 2026
+      anu-pandc exams COMP3300
       anu-pandc calendar --year 2026 --ranges
     """
     if rate is not None:
@@ -843,6 +845,137 @@ def timetable_cmd(terms, year, period, include_clones, week, formats, save_dir,
             for fmt in formats:
                 emit(renders[fmt](), fmt, plain)
     sys.exit(1 if errors else 0)
+
+
+# ---- exams -------------------------------------------------------------------
+
+
+def _resolve_exam_events(event_args: tuple[str, ...], year: str | None) -> list[dict]:
+    """The events to search: those named by --event, else every open one."""
+    open_events = None
+    chosen: list[dict] = []
+    for arg in event_args:
+        if arg.isdigit():
+            chosen.append({"db": arg, "name": "", "year": ""})
+            continue
+        if open_events is None:
+            open_events = exams.fetch_events()
+        found = [e for e in open_events if arg.lower() in e["name"].lower()]
+        if not found:
+            names = "; ".join(e["name"] for e in open_events) or "none"
+            _fail(f"no open exam event matches {arg!r}. Open now: {names}")
+        chosen.extend(found)
+    if not event_args:
+        chosen = exams.fetch_events()
+    if year:
+        chosen = [e for e in chosen if not e["year"] or e["year"] == str(year)]
+    return list({e["db"]: e for e in chosen}.values())
+
+
+@cli.command("exams", short_help="Exam dates, times and rooms, when published.")
+@click.argument("terms", metavar="[TERM...]", nargs=-1)
+@click.option("--event", "-e", "event_args", multiple=True, metavar="DB-OR-NAME",
+              help="Only this exam event: its db number, or words from its name "
+                   "such as 'End of Semester'. Default: every open event.")
+@click.option("--year", "-y", help="Only events for this year.")
+@click.option("--list", "list_events", is_flag=True,
+              help="List the exam events open right now and stop.")
+@click.option("--format", "-f", "formats", multiple=True, type=click.Choice(TABLE_FORMATS))
+@_save_option
+@_force_option
+@_plain_option
+def exams_cmd(terms, event_args, year, list_events, formats, save_dir, force, plain):
+    """Exam timetable for course codes (or a subject prefix such as COMP).
+
+    Reads exams.anu.edu.au. The Examinations Office publishes each exam event
+    (end of semester, in-class and online, deferred) only once it is released
+    and only until it closes, so most of the year there is nothing to read.
+    With no TERM, or with --list, prints the events open right now.
+
+    Co-taught courses sit one exam under a combined code, and a large exam is
+    published once per room; both are folded into one row per exam. Exam
+    period dates for the whole university are in `calendar`.
+
+    \b
+    Examples:
+      anu-pandc exams --list
+      anu-pandc exams COMP1100 COMP2300
+      anu-pandc exams COMP --event "End of Semester" -f csv
+    """
+    formats = _formats(formats)
+    scraped_at = now_iso()
+    events = _resolve_exam_events(event_args, year)
+
+    if list_events or not terms:
+        if not events:
+            status("[none] no exam timetable is published at the moment. Events "
+                   f"appear at {exams.event_url(0)} once the Examinations Office "
+                   "releases them.", "yellow")
+            return
+        renders = {
+            "md": lambda: exams.events_to_markdown(events, scraped_at),
+            "csv": lambda: rows_to_csv(events, ["db", "name", "year"]),
+            "json": lambda: rows_to_json(events),
+        }
+        for fmt in formats:
+            emit(renders[fmt](), fmt, plain)
+        return
+
+    if not events:
+        _fail("no exam timetable is published at the moment"
+              f"{' for ' + str(year) if year else ''}. Events appear at "
+              f"{exams.event_url(0)} once the Examinations Office releases them; "
+              "`anu-pandc exams --list` shows what is open.")
+
+    terms = [t.strip().upper() for t in terms if t.strip()]
+    label = "-".join(terms)
+    store = Store(save_dir) if save_dir else None
+    save_year = year or next((e["year"] for e in events if e["year"]), "")
+    if store and not save_year:
+        _fail("cannot tell which year to save under; pass --year")
+    paths = [store.table_path(save_year, "exams", label, f) for f in formats] if store else []
+    if store and not force and all(p.exists() for p in paths):
+        status(f"[skip] exams {label} {save_year}", "dim")
+        return
+
+    searched, found = [], []
+    for event in events:
+        try:
+            result = exams.search(event["db"], terms)
+        except Exception as exc:  # noqa: BLE001
+            _fail(f"exam timetable db={event['db']}: {exc}")
+        info = result["event"]
+        if not info["open"]:
+            why = (f"closed after {info['closed_after']}" if info["closed_after"]
+                   else "no search form on the page")
+            status(f"[closed] {info['name'] or 'db=' + event['db']}: {why}.", "yellow")
+            continue
+        searched.append(info)
+        found += exams.matching(exams.exams(result["rows"], info), terms)
+
+    if not searched:
+        _fail("every exam event asked about has closed; `anu-pandc exams --list` "
+              "shows what is open.")
+    if not found:
+        names = "; ".join(e["name"] for e in searched)
+        status(f"[none] no exams for {', '.join(terms)} in {names}. A course with no "
+               "centrally scheduled exam is not listed.", "yellow")
+        return
+
+    renders = {
+        "md": lambda: exams.to_markdown(found, searched, terms, scraped_at),
+        "csv": lambda: rows_to_csv(exams.rows_for_table(found), exams.FIELDS),
+        "json": lambda: rows_to_json(found),
+    }
+    if store:
+        for fmt, path in zip(formats, paths):
+            store.write(path, renders[fmt]())
+            status(f"→ {path}  ({len(found)} exams)", "green")
+        store.log(save_year, f"exams-{label} — {exams.BASE_URL} "
+                             f"(db={','.join(e['db'] for e in searched)})")
+    else:
+        for fmt in formats:
+            emit(renders[fmt](), fmt, plain)
 
 
 # ---- calendar ----------------------------------------------------------------

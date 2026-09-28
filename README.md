@@ -7,7 +7,7 @@
 A command-line interface to [ANU Programs &
 Courses](https://programsandcourses.anu.edu.au) and the other ANU sources a
 curriculum question runs into: the Policy Library, University legislation, the
-class timetable and the university calendar.
+class timetable, the exam timetable and the university calendar.
 
 > **Unofficial.** A tool from the [Sound, Music and Creative Computing Lab
 > (SMCClab)](https://smcclab.github.io) in the ANU School of Computing, for
@@ -23,11 +23,12 @@ It also fetches per-class summary pages (convener, dates, real assessment
 schedule), lists every course under a subject prefix from the catalogue search
 API, and extracts planned offerings for future years before P&C publishes them.
 
-Beyond P&C it reads four more sources, because a question about coursework
+Beyond P&C it reads five more sources, because a question about coursework
 rarely stays inside one of them. What a course *must* do comes from
 legislation; how the University applies that comes from the Policy Library;
-when it happens comes from the university calendar; and where the class meets
-comes from the timetable.
+when it happens comes from the university calendar; where the class meets
+comes from the timetable; and when and where its exam sits comes from the exam
+timetable, once the Examinations Office has published it.
 
 ## If you are an agent or chat without a shell
 
@@ -39,8 +40,8 @@ and they have the URL shapes, the parsing traps and the etiquette:
   who is convening something, and how to work out which year and teaching
   period a question is actually about:
   <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md>
-- **The other four sources** — the Policy Library, University legislation, the
-  class timetable and the university calendar:
+- **The other sources** — the Policy Library, University legislation, the
+  class timetable, the exam timetable and the university calendar:
   <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md>
 
 Which one you need depends on the question, and getting that wrong is the
@@ -52,6 +53,7 @@ commonest way to answer confidently and wrongly:
 | When and where does the class actually meet? | MyTimetable | the second |
 | What week is it? Census, breaks, exams, results? | University calendar | the second |
 | What is on in *one particular week*? | the timetable, narrowed to that week | the second |
+| When and where is this course's exam? | the exam timetable, when published | the second |
 | What must happen, and who may decide it? | Legislation, then the Policy Library | the second |
 
 A question with a date in it ("this week", "is it census yet", "what's on in
@@ -105,6 +107,7 @@ first fetch.
 | `programsandcourses.anu.edu.au` | programs, courses, class summaries |
 | `policies.anu.edu.au` | the Policy Library |
 | `mytimetable.anu.edu.au` | the class timetable |
+| `exams.anu.edu.au` | the exam timetable |
 | `www.anu.edu.au` | the university calendar, the legislation index |
 | `api.prod.legislation.gov.au` | Federal Register metadata |
 | `www.legislation.gov.au` | Federal Register document text |
@@ -186,6 +189,8 @@ anu-pandc legislation get "Coursework Awards Rule"
 anu-pandc calendar --year 2026 --ranges
 anu-pandc timetable COMP3300 --year 2026
 anu-pandc timetable COMP1100 --year 2026 --week 2026-09-21   # just that week
+anu-pandc exams --list                        # which exam timetables are open now
+anu-pandc exams COMP1100 COMP2300             # exam date, time and rooms
 ```
 
 Markdown is rendered nicely when printing to a terminal; pipe it or pass
@@ -215,6 +220,7 @@ And, for the sources beyond P&C:
 | `legislation get ID-OR-NAME...` | An instrument's status, commencement, what authorises it, and its full text from the Federal Register. |
 | `legislation search TERM` | Titles on the Register whose *name* matches. |
 | `timetable TERM... --year Y` | Scheduled classes from MyTimetable, plus the contact hours one student carries. `--week YYYY-MM-DD` narrows to the Mon–Sun week around a date, which is what "what's on this week" needs — without it the table is a weekly pattern covering every teaching period of the year. |
+| `exams [TERM...]` | Exam dates, times, reading and writing time, and rooms from the exam timetable, for course codes or a subject prefix (`COMP`). Searches every exam event open right now; `--event` narrows to one (its db number or words from its name), `--year` to one year. With no TERM, or `--list`, prints the open events. Most of the year nothing is published, and it says so. |
 | `calendar --year Y` | The university calendar: census dates, teaching breaks, exam periods, results, public holidays. `--ranges` pairs the begins/ends events; `--find WORD` narrows. |
 
 Global options: `--rate SECONDS` (pause between requests, default 0.5),
@@ -233,6 +239,7 @@ DIR/2026/
   catalogue-COMP.md            all COMP courses that year (code, title, career, units, sessions)
   offerings-COMP.csv           planned sittings for the 2026 offering year
   timetable-COMP3300.md        scheduled classes and contact hours
+  exams-COMP1100.md            exam date, time and rooms, when published
   calendar.md                  the university calendar for that year
   course-codes.txt             union of every course code seen so far
   scrape-log.md                append-only record of what was fetched when
@@ -288,6 +295,11 @@ duration, room, session count from the explicit date list, and the co-taught
 course codes — plus contact hours for one student, counting one stream per
 activity group rather than all the alternatives.
 
+**Exam timetable**: one row per exam — the co-taught courses sitting it,
+exam title, sitting type, date, start, end (start plus reading and writing
+time), reading and writing minutes, and every room it is spread across,
+folded together from the one-row-per-room table the site publishes.
+
 **University calendar**: every event, and the begins/ends pairs reassembled
 into date ranges.
 
@@ -308,6 +320,15 @@ into date ranges.
   2026 — and has no year parameter, so no other year can be read from it.
 - The timetable is the *scheduled* one. It changes, it does not say who taught,
   and it is not evidence that anything was delivered.
+- The exam timetable is only there while an event is open. Each exam event
+  (end of semester, in-class and online, deferred) is released when the
+  Examinations Office is ready and closes on a fixed date, so most of the year
+  `exams` finds nothing, and that is the right answer. Its `db` numbers are
+  recycled slots, not ids — `db=14` was Semester 1 2024 — so the tool reads the
+  index rather than guessing them.
+- Co-taught courses sit one exam under a combined code
+  (`COMP1110/COMP1140/COMP6710_Semester 2`); searching any one of them finds
+  it. The site's search is a prefix match, so `COMP` finds every COMP exam.
 - Calendar events are all single days; ranges are published as separate
   begins/ends events with wording that drifts between years. `--ranges` pairs
   them. Cite the calendar page, not the feed.
@@ -360,9 +381,9 @@ a page, and [CHANGELOG.md](CHANGELOG.md) for what has changed between versions.
   that cannot run this CLI. Point one at the [raw
   file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md).
 - [docs/reading-anu-sources-directly.md](https://github.com/smcclab/anu-pandc/blob/main/docs/reading-anu-sources-directly.md) —
-  the same fallback for the four sources beyond P&C: which source answers which
+  the same fallback for the sources beyond P&C: which source answers which
   kind of question, the URL shapes for the Policy Library, the Federal Register,
-  MyTimetable and the university calendar, and the quirks that make each of them
+  MyTimetable, the exam timetable and the university calendar, and the quirks that make each of them
   easy to read wrongly. [Raw
   file](https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md).
 - [docs/pc-api.md](https://github.com/smcclab/anu-pandc/blob/main/docs/pc-api.md) — the undocumented JSON endpoints behind the

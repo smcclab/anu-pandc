@@ -3,10 +3,10 @@
 One session, a self-identifying User-Agent, and a small pause before every
 request so reading a few hundred pages does not hammer the ANU servers.
 
-Five hosts are involved. Programs & Courses is the original one; the policy
-library, MyTimetable, the university calendar and the Federal Register of
-Legislation came later. They are listed in ``HOSTS`` so a sandbox that has to
-allow-list them can be told all five at once.
+Several hosts are involved. Programs & Courses is the original one; the policy
+library, MyTimetable, the exam timetable, the university calendar and the
+Federal Register of Legislation came later. They are listed in ``HOSTS`` so a
+sandbox that has to allow-list them can be told all of them at once.
 """
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ HOSTS = {
     "programsandcourses.anu.edu.au": "programs, courses and class summaries",
     "policies.anu.edu.au": "the ANU Policy Library",
     "mytimetable.anu.edu.au": "the published class timetable",
+    "exams.anu.edu.au": "the published exam timetable",
     "www.anu.edu.au": "the university calendar and the legislation index",
     "api.prod.legislation.gov.au": "Federal Register of Legislation metadata",
     "www.legislation.gov.au": "Federal Register of Legislation document text",

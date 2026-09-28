@@ -1,9 +1,9 @@
 # AGENTS.md
 
 `anu-pandc` reads [ANU Programs & Courses](https://programsandcourses.anu.edu.au)
-and the four other ANU sources a curriculum question runs into: the Policy
-Library, University legislation, the class timetable and the university
-calendar. Unofficial; a tool from the SMCC Lab in the ANU School of Computing.
+and the other ANU sources a curriculum question runs into: the Policy
+Library, University legislation, the class timetable, the exam timetable and
+the university calendar. Unofficial; a tool from the SMCC Lab in the ANU School of Computing.
 
 ## If you can run a shell
 
@@ -14,6 +14,7 @@ uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc get COMP1100 -
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc classes COMP1100 --year 2026
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc timetable COMP1100 --year 2026 --week 2026-09-21
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc calendar --year 2026 --ranges
+uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc exams COMP1100
 ```
 
 `--help` lists the rest. Read
@@ -32,8 +33,8 @@ parsing traps and the etiquette:
   class summaries, who is convening something, and how to work out which year
   and teaching period a question is actually about:
   <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-pandc-directly.md>
-- **The other four sources** — the Policy Library, University legislation,
-  MyTimetable and the university calendar:
+- **The other sources** — the Policy Library, University legislation,
+  MyTimetable, the exam timetable and the university calendar:
   <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/reading-anu-sources-directly.md>
 - **The P&C JSON API** — the undocumented catalogue-search endpoints:
   <https://raw.githubusercontent.com/smcclab/anu-pandc/main/docs/pc-api.md>
@@ -49,6 +50,7 @@ Getting this wrong is the commonest way to answer confidently and wrongly.
 | When and where does the class meet? | MyTimetable — scheduled, not evidence of delivery |
 | What is on in one particular week? | MyTimetable with `--week YYYY-MM-DD`; a whole-year timetable is a weekly *pattern* across every teaching period and cannot answer it |
 | What week is it? Census, teaching breaks, exams, results? | the university calendar |
+| When and where is this course's exam? | the exam timetable — only while an exam event is open; nothing published is a normal answer |
 | How does the University apply a rule? | the Policy Library |
 | What *must* happen, and who may decide it? | legislation — Statutes, Rules, Orders |
 

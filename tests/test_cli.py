@@ -333,3 +333,50 @@ def test_calendar_find_narrows_to_matching_events():
     rows = r.stdout.strip().splitlines()[1:]
     assert len(rows) == 2
     assert all("census" in row for row in rows)
+
+
+EXAMS = "https://exams.anu.edu.au/timetable/login.php"
+HTML = "text/html; charset=utf-8"
+
+
+@resp.activate
+def test_exams_with_no_term_lists_the_open_events():
+    resp.add(resp.GET, f"{EXAMS}?db=0", body=raw("exams_index.html"), content_type=HTML)
+    r = run("exams", "-f", "csv")
+    assert r.exit_code == 0
+    assert '13,"Semester 2 - End of Semester, 2026",2026' in r.stdout
+
+
+@resp.activate
+def test_exams_opens_each_event_before_searching_and_follows_pages():
+    resp.add(resp.GET, f"{EXAMS}?db=0", body=raw("exams_index.html"), content_type=HTML)
+    resp.add(resp.GET, f"{EXAMS}?db=13", body=raw("exams_event_13.html"), content_type=HTML)
+    resp.add(resp.POST, f"{EXAMS}?db=13", body=raw("exams_COMP_page1.html"), content_type=HTML)
+    resp.add(resp.GET, f"{EXAMS}?skip=20", body=raw("exams_COMP_page2.html"), content_type=HTML)
+    resp.add(resp.GET, f"{EXAMS}?skip=40", body=raw("exams_COMP_page3.html"), content_type=HTML)
+    r = run("exams", "COMP", "--event", "End of Semester", "-f", "csv")
+    assert r.exit_code == 0, r.stderr
+    rows = r.stdout.strip().splitlines()[1:]
+    assert len(rows) == 20
+    assert any("COMP1110/COMP1140/COMP6710,COMP1110/COMP1140/COMP6710_Semester 2" in row
+               for row in rows)
+    methods = [(c.request.method, c.request.url.rsplit("?", 1)[-1]) for c in resp.calls]
+    assert methods.index(("GET", "db=13")) < methods.index(("POST", "db=13"))
+
+
+@resp.activate
+def test_exams_says_when_nothing_is_published():
+    resp.add(resp.GET, f"{EXAMS}?db=0", body="<html><body><div class='databee-content'>"
+             "</div></body></html>", content_type=HTML)
+    r = run("exams", "COMP1100")
+    assert r.exit_code == 1
+    assert "no exam timetable is published" in r.stderr
+
+
+@resp.activate
+def test_exams_reports_a_closed_event_without_searching_it():
+    resp.add(resp.GET, f"{EXAMS}?db=14", body=raw("exams_expired_14.html"), content_type=HTML)
+    r = run("exams", "COMP1100", "--event", "14")
+    assert r.exit_code == 1
+    assert "closed after 2024-05-21" in r.stderr
+    assert all(c.request.method == "GET" for c in resp.calls)

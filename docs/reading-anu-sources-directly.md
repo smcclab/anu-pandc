@@ -3,9 +3,9 @@
 **This is a fallback. If you can run `anu-pandc`, stop reading and run it.**
 
 Its companion, [reading-pandc-directly.md](reading-pandc-directly.md), covers
-Programs & Courses. This one covers the four sources the CLI reads alongside
-it: the **Policy Library**, **University legislation**, the **class timetable**
-and the **university calendar**. Same caveat as the companion — hand-fetching
+Programs & Courses. This one covers the sources the CLI reads alongside it:
+the **Policy Library**, **University legislation**, the **class timetable**,
+the **exam timetable** and the **university calendar**. Same caveat as the companion — hand-fetching
 re-derives parsers that already exist, and the CLI is the right answer wherever
 it runs:
 
@@ -13,7 +13,8 @@ it runs:
 uvx --from git+https://github.com/smcclab/anu-pandc.git anu-pandc policy get ANUP_004603
 ```
 
-Everything below was checked against the live sites on 2026-09-20.
+Everything below was checked against the live sites on 2026-09-20 (the exam
+timetable on 2026-09-28).
 
 ## What lives where
 
@@ -28,6 +29,7 @@ way to give a confidently wrong answer.
 | What does this course require of a student? | **P&C** course page, then the **class summary** for the real assessment. |
 | When does it happen, university-wide? | **University calendar** — census, breaks, exam periods, results. |
 | When and where does a class meet? | **MyTimetable** — scheduled, not delivered. |
+| When and where is a course's exam? | **Exam timetable** — only while its exam event is open. |
 
 Legislation beats policy, policy beats procedure, and a class summary beats all
 of them for what a particular class actually did. If a policy and a Rule
@@ -186,7 +188,64 @@ Other endpoints under `../rest/timetable/`: `locations` and `studentsets`
   summaries; check the dates against the calendar's teaching breaks and public
   holidays.
 
-## 4. The university calendar
+## 4. The exam timetable
+
+`https://exams.anu.edu.au/timetable/login.php` — server-rendered PHP, no
+JavaScript needed. The Examinations Office publishes each exam *event*
+("Semester 2 - End of Semester, 2026", "Semester 2 - In-Class & Online, 2026")
+as its own database, chosen with `db`.
+
+| What | How |
+|------|-----|
+| Events open right now | `GET login.php?db=0`: a link per event, `login.php?db=N` |
+| One event's search form | `GET login.php?db=N` |
+| Search | `POST login.php?db=N` with form field `Code=COMP1100,COMP2300` |
+| Next page of results | `GET login.php?skip=20`, then `skip=40`, … on the same session |
+
+```bash
+curl -s -c jar -b jar 'https://exams.anu.edu.au/timetable/login.php?db=13' > /dev/null
+curl -s -c jar -b jar --data 'Code=COMP1100' 'https://exams.anu.edu.au/timetable/login.php?db=13'
+```
+
+Results are `table#table-compact`, one row per exam *per room*, with a header
+row naming the columns. The end-of-semester event has Exam Code, Exam Title,
+Assessment Type, Date (`Friday 20/11/2026`), Time (`2:00pm`), Writing Time and
+Reading Time (minutes), Venue, Building (the ANU building number) and Room.
+"Sorry, no exams were found." means just that.
+
+### Gotchas
+
+- **Most of the year there is nothing here.** An event appears only when the
+  Examinations Office releases it and closes on a fixed date; after that its
+  page reads "Sorry, this feature is not available after DD/MM/YYYY". An empty
+  or irrelevant index is a normal answer — say the exam timetable is not
+  published yet, and give the calendar's exam period instead. Do not infer an
+  exam date from anything else.
+- **`db` numbers are recycled slots, not ids.** `db=14` held Semester 1 2024,
+  `db=1` Semester 1 2025, `db=13` Semester 2 2026. Always start from `db=0`;
+  never guess or bookmark a number.
+- **Columns differ between events.** The in-class event has no Reading Time or
+  Room. Read the header row; never index cells by position.
+- **The session carries state.** The pager links (`?skip=20`) name neither the
+  event nor the search — the PHP session cookie does. And once a session has
+  searched one event, a POST straight to another answers HTTP 500 until that
+  event's page has been loaded with a GET. Load the event page, then search.
+- **One exam, many rows.** A large exam is published once per room (COMP1730:
+  seven rooms). Group by exam code, date and time before counting exams. A
+  student sits in one room, and the table does not say which.
+- **Co-taught courses share an exam code**: `COMP1110/COMP1140/COMP6710_Semester 2`.
+  What follows the first underscore is the sitting, and may carry stray
+  numbers (`COMP3300_Semester 2 / 3300`) or a second sitting
+  (`MATH1014_Semester 2-1`).
+- **Search is a prefix match on each part of the code**, case-insensitive:
+  `COMP6710` finds the combined code above, `COMP` finds every COMP exam, and
+  `6710` finds nothing.
+- The form carries a hidden `_token`. The server accepts a search without it
+  today; send it back if you have loaded the form anyway.
+- The page status beside the event name ("Final Timetable") is the release
+  state. Quote it along with the date.
+
+## 5. The university calendar
 
 Published twice, as a page and as a feed:
 
@@ -244,6 +303,7 @@ These are the hosts involved, for an egress allow-list:
 programsandcourses.anu.edu.au   programs, courses, class summaries
 policies.anu.edu.au             the Policy Library
 mytimetable.anu.edu.au          the class timetable
+exams.anu.edu.au                the exam timetable
 www.anu.edu.au                  the university calendar, the legislation index
 api.prod.legislation.gov.au     Register metadata
 www.legislation.gov.au          Register document text

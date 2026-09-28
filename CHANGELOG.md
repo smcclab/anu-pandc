@@ -6,6 +6,17 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `exams` — exam dates, times, reading and writing time, and rooms from the
+  published exam timetable at exams.anu.edu.au, for course codes or a subject
+  prefix. The Examinations Office publishes each exam event only between its
+  release and a fixed closing date, so the command searches whatever events
+  are open (`--list` shows them) and says plainly when nothing is published.
+  The site's one-row-per-room table is folded into one row per exam, and
+  co-taught courses sharing a combined exam code are all named on it.
+  `exams.anu.edu.au` joins the hosts an egress allow-list needs.
+
 ## [0.3.1] — 2026-09-20
 
 ### Added
