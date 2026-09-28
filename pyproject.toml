@@ -1,7 +1,7 @@
 [project]
 name = "anu-pandc"
 version = "0.3.1"
-description = "A command-line interface to ANU curriculum data: Programs & Courses, the Policy Library, University legislation, the class timetable and the university calendar, as Markdown, JSON or CSV."
+description = "A command-line interface to ANU curriculum data: Programs & Courses, the Policy Library, University legislation, the class and exam timetables and the university calendar, as Markdown, JSON or CSV."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

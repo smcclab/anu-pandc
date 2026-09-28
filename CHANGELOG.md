@@ -24,6 +24,8 @@ All notable changes to this project are recorded here. The format follows
   problems with each. It and the agent docs now say that school course
   websites are non-official: the class summary is the only official listing
   of what is in a course.
+- Publishing a GitHub release now publishes the package to PyPI, through a
+  trusted-publishing workflow.
 
 ## [0.3.1] — 2026-09-20
 

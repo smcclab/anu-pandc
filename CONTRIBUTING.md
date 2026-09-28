@@ -46,8 +46,19 @@ already public on the P&C website.
 
 ## Releasing
 
+Publishing a GitHub release publishes the package to
+[PyPI](https://pypi.org/project/anu-pandc/) through
+`.github/workflows/publish.yml`, using PyPI trusted publishing — there is no
+API token anywhere.
+
 1. Update `version` in `pyproject.toml` and `__version__` in
-   `src/anu_pandc/__init__.py` — they must match.
+   `src/anu_pandc/__init__.py` — they must match. The workflow refuses to
+   publish if either differs from the release tag.
 2. Move the `CHANGELOG.md` entries from "Unreleased" into the new version.
-3. `uv build && uvx twine check dist/*`.
-4. Tag `vX.Y.Z` and push the tag.
+3. `uv build && uvx twine check dist/*` to check locally.
+4. Commit, push, then publish a release for the tag `vX.Y.Z`:
+   `gh release create vX.Y.Z --title vX.Y.Z --notes-from-tag` (or write the
+   notes from the changelog). The workflow tests, builds and uploads it.
+
+A version number can only ever be uploaded to PyPI once. If a publish fails
+after upload, fix forward with a new patch version.

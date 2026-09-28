@@ -1,0 +1,49 @@
+name: publish
+
+# Publishes to PyPI when a GitHub release is published. Uses PyPI trusted
+# publishing (OIDC), so there is no API token in the repository: PyPI trusts
+# this workflow file, in this repository, running in the `pypi` environment.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Check the tag matches the package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          project=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          module=$(grep -m1 '^__version__ = ' src/anu_pandc/__init__.py | cut -d'"' -f2)
+          echo "tag=$tag pyproject=$project __init__=$module"
+          if [ "$tag" != "$project" ] || [ "$tag" != "$module" ]; then
+            echo "::error::Release tag v$tag does not match pyproject.toml ($project) and __init__.py ($module)"
+            exit 1
+          fi
+      - run: uv sync --locked --dev
+      - run: uv run pytest -q
+      - run: uv build
+      - run: uvx twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/anu-pandc/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
