@@ -278,11 +278,15 @@ fee-paying tuition for the page's year).
 outcomes, requirement groups as tables of courses, and the list of
 majors/minors/specialisations offered.
 
-**Class summary pages**: convener and lecturer, mode, start/end/census/last-
-enrol dates, description, learning outcomes, assessment summary table with due
-dates and LO mapping, per-task detail, examinations, participation, late-
-submission and extension policies, class schedule, resources, and tutorial
-registration.
+**Class summary pages**: every section on the page. Convener and lecturer
+(with email, phone, consulting hours and research interests), mode, start/end/
+census/last-enrol dates, description, learning outcomes, assessment summary
+table with due dates and LO mapping, per-task detail, assessment requirements,
+moderation, examinations, participation, submission, late-submission,
+returning, extension and resubmission rules, class schedule, required and
+recommended resources, staff and student feedback, other information, tutorial
+registration, and the university-wide academic integrity, policies, privacy,
+grade distribution and student support text.
 
 **Policy Library documents**: the document body as Markdown — with its clause
 numbering intact, which matters because a policy cites its own clauses — plus

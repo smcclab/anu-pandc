@@ -8,8 +8,12 @@ plus an Examination(s) section, class schedule, and convener info.
 URL pattern: /course/{CODE}/{Period}/{ClassNumber}
 e.g. /course/COMP1100/First%20Semester/3695
 """
+import copy
 import re
-from bs4 import BeautifulSoup, NavigableString, Tag
+
+from bs4 import BeautifulSoup, Tag
+
+from anu_pandc.parse.html_md import to_markdown
 
 
 # ---- helpers -----------------------------------------------------------------
@@ -74,57 +78,65 @@ def _extract_summary_codes(soup: BeautifulSoup) -> dict:
     return out
 
 
-def _section_after(soup: BeautifulSoup, h2_id: str) -> Tag | None:
-    """Return the <h2> tag with the given id, or None."""
-    return soup.find("h2", id=h2_id)
+def _section_after(soup: BeautifulSoup, h2_id: str, title: str = "") -> Tag | None:
+    """Return the <h2> tag with the given id, or None.
 
-
-_BLOCK_TAGS = {"p", "li", "blockquote", "div", "ul", "ol", "h3", "h4", "h5", "h6", "tr", "br"}
-
-
-def _section_text(soup: BeautifulSoup, h2_id: str) -> str:
-    """Return joined plain text of the section starting at h2#h2_id, until next h2.
-
-    Walks forward in *document order* (not just sibling order) and stops at the
-    next ``<h2>`` anywhere in the tree. ANU class pages occasionally contain
-    malformed markup — e.g. ``<b>Timetable webpage.<b></b>`` leaves a ``<b>``
-    unclosed, so html.parser nests every later section (Assessment Summary,
-    Policies, …) inside it. A sibling-only scan would then slurp that whole
-    blob into "Tutorial Registration". Walking document order and breaking at
-    the next ``<h2>`` keeps the section to its real content. Tables are skipped
-    (dedicated parsers handle them); paragraph-ish breaks are preserved.
+    ``title`` picks between h2s sharing an id: the page gives both "Learning
+    Outcomes" and "Policies" ``id="policies"``.
     """
-    h2 = _section_after(soup, h2_id)
-    if not h2:
-        return ""
+    for h2 in soup.find_all("h2", id=h2_id):
+        if not title or h2.get_text(strip=True).startswith(title):
+            return h2
+    return None
+
+
+BASE_URL = "https://programsandcourses.anu.edu.au"
+
+
+def _section_nodes(h2: Tag) -> list:
+    """The top-level nodes between ``h2`` and the next ``<h2>``, in document order.
+
+    ANU class pages occasionally contain malformed markup — e.g.
+    ``<b>Timetable webpage.<b></b>`` leaves a ``<b>`` unclosed, so html.parser
+    nests every later section (Assessment Summary, Policies, …) inside it. A
+    sibling-only scan would then slurp that whole blob into "Tutorial
+    Registration". Walking document order, stepping *into* any element that
+    contains the next ``<h2>`` and stopping at it, keeps the section to its
+    real content.
+    """
     stop = h2.find_next("h2")
-
-    parts: list[str] = []
-    buf: list[str] = []
-
-    def flush() -> None:
-        if buf:
-            text = " ".join(buf).strip()
-            if text:
-                parts.append(text)
-            buf.clear()
-
+    wraps_stop = {id(p) for p in stop.parents} if stop else set()
+    nodes: list = []
     for el in h2.next_elements:
         if el is stop:
             break
-        if isinstance(el, NavigableString):
-            parent = el.parent
-            if parent is not None and parent.name in ("h2", "script", "style"):
-                continue
-            if el.find_parent("table") is not None:
-                continue
-            text = re.sub(r"\s+", " ", str(el)).strip()
-            if text:
-                buf.append(text)
-        elif isinstance(el, Tag) and el.name in _BLOCK_TAGS:
-            flush()
-    flush()
-    return "\n\n".join(parts).strip()
+        if h2 in el.parents or (nodes and nodes[-1] in el.parents):
+            continue
+        if id(el) in wraps_stop:
+            continue
+        nodes.append(el)
+    return nodes
+
+
+def _section_markdown(nodes: list) -> str:
+    """Render section nodes as Markdown, keeping links, lists and emphasis."""
+    frag = BeautifulSoup("<div></div>", "html.parser").div
+    for node in nodes:
+        frag.append(copy.copy(node))
+    return to_markdown(frag, BASE_URL)
+
+
+def _section_text(soup: BeautifulSoup, h2_id: str, title: str = "") -> str:
+    """Markdown for the section starting at h2#h2_id, up to the next h2.
+
+    Tables are skipped: the two sections that have one (Class Schedule and
+    Assessment Summary) have dedicated parsers.
+    """
+    h2 = _section_after(soup, h2_id, title)
+    if not h2:
+        return ""
+    nodes = [n for n in _section_nodes(h2) if not (isinstance(n, Tag) and n.name == "table")]
+    return _section_markdown(nodes)
 
 
 def _description(soup: BeautifulSoup) -> str:
@@ -137,7 +149,7 @@ def _description(soup: BeautifulSoup) -> str:
         if child.name == "h2":
             break
         if child.name == "p":
-            text = child.get_text(" ", strip=True)
+            text = to_markdown(child, BASE_URL)
             if text:
                 parts.append(text)
     return "\n\n".join(parts).strip()
@@ -268,26 +280,23 @@ def _assessment_tasks(soup: BeautifulSoup) -> list[dict]:
             if los_m:
                 los = los_m.group(1).strip()
 
-        # The task name is in a <p><b>...</b></p> immediately after the callout
+        # The task name is in a <p><b>...</b></p> immediately after the
+        # callout; everything after it is the description.
         name = ""
         description_parts: list[str] = []
-        cursor = callout if callout else h2
-        for sib in cursor.next_siblings:
-            if isinstance(sib, Tag):
-                if sib.name == "h2":
-                    break
-                if sib.name == "p":
-                    bold = sib.find("b")
-                    if bold and not name:
-                        name = bold.get_text(" ", strip=True)
-                        # Any extra text in the same <p> after the bold name
-                        rest = sib.get_text(" ", strip=True)
-                        if rest != name:
-                            description_parts.append(rest.replace(name, "", 1).strip(" -—:"))
-                    else:
-                        text = sib.get_text(" ", strip=True)
-                        if text:
-                            description_parts.append(text)
+        rest: list = []
+        for node in _section_nodes(h2):
+            if node is callout:
+                continue
+            if not name and isinstance(node, Tag) and node.name == "p" and node.find("b"):
+                name = node.find("b").get_text(" ", strip=True)
+                # Any extra text in the same <p> after the bold name
+                extra = node.get_text(" ", strip=True)
+                if extra != name:
+                    description_parts.append(extra.replace(name, "", 1).strip(" -—:"))
+                continue
+            rest.append(node)
+        description_parts.append(_section_markdown(rest))
 
         tasks.append({
             "n": n,
@@ -325,6 +334,54 @@ def _class_schedule(soup: BeautifulSoup) -> list[dict]:
     return rows
 
 
+# ---- contacts ----------------------------------------------------------------
+
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+$")
+
+
+def _contacts(soup: BeautifulSoup) -> list[dict]:
+    """The Contacts tab: one callout box per convener or instructor.
+
+    Each box has a Details pane (name, then phone and/or email, then research
+    interests) and a Consulting Hours pane (a small table of free-text rows).
+    """
+    contacts = []
+    for h2 in soup.find_all("h2", id=re.compile(r"^contact_")):
+        box = h2.find_parent(class_="callout-box")
+        if box is None:
+            continue
+        role = h2.get_text(strip=True)
+        for details in box.find_all(id=re.compile(r"^contact_details_")):
+            entry = {"role": role, "name": "", "phone": "", "email": "",
+                     "research_interests": "", "consulting_hours": []}
+            inner = details.select_one("table.class-contact-table table")
+            lines = [td.get_text(" ", strip=True) for td in inner.find_all("td")] if inner else []
+            lines = [line for line in lines if line]
+            if lines:
+                entry["name"] = lines[0]
+            for line in lines[1:]:
+                if _EMAIL_RE.match(line):
+                    entry["email"] = entry["email"] or line
+                elif not entry["phone"]:
+                    entry["phone"] = line
+            interests = details.find("h3", string=re.compile("Research Interests"))
+            if interests and interests.parent:
+                text = interests.parent.get_text(" ", strip=True)
+                entry["research_interests"] = text.replace("Research Interests", "", 1).strip()
+
+            hours_id = details["id"].replace("contact_details_", "contact_consulting_hours_")
+            hours = box.find(id=hours_id)
+            if hours:
+                for tr in hours.select("table.table-consulting-hours tr"):
+                    row = " ".join(td.get_text(" ", strip=True) for td in tr.find_all("td"))
+                    row = re.sub(r"\s+", " ", row).strip()
+                    if row:
+                        entry["consulting_hours"].append(row)
+            contacts.append(entry)
+    return contacts
+
+
 # ---- top-level parse ---------------------------------------------------------
 
 
@@ -350,21 +407,46 @@ def parse_class(soup: BeautifulSoup, code: str, period: str, class_number: str, 
         "description": _description(soup),
         "learning_outcomes": _learning_outcomes(soup),
         "research_led_teaching": _section_text(soup, "research-led-teaching"),
-        "recommended_resources": _section_text(soup, "recommended-resources")
-            or _section_text(soup, "required-resources"),
+        "required_resources": _section_text(soup, "required-resources"),
+        "recommended_resources": _section_text(soup, "recommended-resources"),
+        "staff_feedback": _section_text(soup, "staff-feedback"),
+        "student_feedback": _section_text(soup, "student-feedback"),
         "other_information": _section_text(soup, "other-information"),
         "tutorial_registration": _section_text(soup, "tutorial-registration"),
         "class_schedule": _class_schedule(soup),
         "assessment_summary": _assessment_summary(soup),
+        "policies": _section_text(soup, "policies", "Policies"),
+        "assessment_requirements": _section_text(soup, "assessment-requirements"),
+        "moderation_of_assessment": _section_text(soup, "moderation-of-assessment"),
         "assessment_tasks": _assessment_tasks(soup),
         "examinations": _section_text(soup, "examination"),
         "participation": _section_text(soup, "participation"),
+        "academic_integrity": _section_text(soup, "academic-integrity"),
+        "online_submission": _section_text(soup, "onlinesubmission"),
+        "hardcopy_submission": _section_text(soup, "hardcopysubmission"),
         "late_submission": _section_text(soup, "latesubmission"),
+        "referencing_requirements": _section_text(soup, "referencing-requirements"),
+        "returning_assignments": _section_text(soup, "returning-assignments"),
         "extensions_and_penalties": _section_text(soup, "extensions-and-penalties"),
+        "resubmission_of_assignments": _section_text(soup, "resubmission-of-assignments"),
+        "privacy_notice": _section_text(soup, "privacy-notice"),
+        "distribution_of_grades": _section_text(soup, "distribution-of-grades-policy"),
+        "support_for_students": _section_text(soup, "support-for-students"),
+        "contacts": _contacts(soup),
     }
 
 
 # ---- markdown ----------------------------------------------------------------
+
+
+def _sections(lines: list[str], data: dict, pairs: list[tuple[str, str]]) -> None:
+    """Append a ``## heading`` and body for each non-empty text field."""
+    for key, heading in pairs:
+        if data.get(key):
+            lines.append(f"## {heading}")
+            lines.append("")
+            lines.append(data[key])
+            lines.append("")
 
 
 def class_to_markdown(data: dict, scraped_at: str) -> str:
@@ -444,17 +526,12 @@ def class_to_markdown(data: dict, scraped_at: str) -> str:
                 )
         lines.append("")
 
-    if data.get("examinations"):
-        lines.append("## Examination(s)")
-        lines.append("")
-        lines.append(data["examinations"])
-        lines.append("")
-
-    if data.get("participation"):
-        lines.append("## Participation")
-        lines.append("")
-        lines.append(data["participation"])
-        lines.append("")
+    _sections(lines, data, [
+        ("assessment_requirements", "Assessment Requirements"),
+        ("moderation_of_assessment", "Moderation of Assessment"),
+        ("examinations", "Examination(s)"),
+        ("participation", "Participation"),
+    ])
 
     tasks = data.get("assessment_tasks") or []
     if tasks:
@@ -482,17 +559,15 @@ def class_to_markdown(data: dict, scraped_at: str) -> str:
                 lines.append(t["description"])
             lines.append("")
 
-    if data.get("late_submission"):
-        lines.append("## Late Submission")
-        lines.append("")
-        lines.append(data["late_submission"])
-        lines.append("")
-
-    if data.get("extensions_and_penalties"):
-        lines.append("## Extensions and Penalties")
-        lines.append("")
-        lines.append(data["extensions_and_penalties"])
-        lines.append("")
+    _sections(lines, data, [
+        ("online_submission", "Online Submission"),
+        ("hardcopy_submission", "Hardcopy Submission"),
+        ("late_submission", "Late Submission"),
+        ("returning_assignments", "Returning Assignments"),
+        ("extensions_and_penalties", "Extensions and Penalties"),
+        ("resubmission_of_assignments", "Resubmission of Assignments"),
+        ("referencing_requirements", "Referencing Requirements"),
+    ])
 
     schedule = data.get("class_schedule") or []
     if schedule:
@@ -507,28 +582,40 @@ def class_to_markdown(data: dict, scraped_at: str) -> str:
             lines.append(f"| {week} | {summary_text} | {assessment_text} |")
         lines.append("")
 
-    if data.get("research_led_teaching"):
-        lines.append("## Research-Led Teaching")
+    _sections(lines, data, [
+        ("research_led_teaching", "Research-Led Teaching"),
+        ("required_resources", "Required Resources"),
+        ("recommended_resources", "Recommended Resources"),
+        ("staff_feedback", "Staff Feedback"),
+        ("student_feedback", "Student Feedback"),
+        ("other_information", "Other Information"),
+        ("tutorial_registration", "Tutorial Registration"),
+    ])
+
+    contacts = data.get("contacts") or []
+    if contacts:
+        lines.append("## Contacts")
         lines.append("")
-        lines.append(data["research_led_teaching"])
+        for c in contacts:
+            bits = [f"**{c.get('role', '')}:** {c.get('name', '')}"]
+            if c.get("email"):
+                bits.append(c["email"])
+            if c.get("phone"):
+                bits.append(c["phone"])
+            lines.append("- " + " · ".join(bits))
+            if c.get("consulting_hours"):
+                lines.append(f"  - Consulting hours: {'; '.join(c['consulting_hours'])}")
+            if c.get("research_interests"):
+                lines.append(f"  - Research interests: {c['research_interests']}")
         lines.append("")
 
-    if data.get("recommended_resources"):
-        lines.append("## Recommended/Required Resources")
-        lines.append("")
-        lines.append(data["recommended_resources"])
-        lines.append("")
-
-    if data.get("other_information"):
-        lines.append("## Other Information")
-        lines.append("")
-        lines.append(data["other_information"])
-        lines.append("")
-
-    if data.get("tutorial_registration"):
-        lines.append("## Tutorial Registration")
-        lines.append("")
-        lines.append(data["tutorial_registration"])
-        lines.append("")
+    # University-wide text, the same on every class summary.
+    _sections(lines, data, [
+        ("academic_integrity", "Academic Integrity"),
+        ("policies", "Policies"),
+        ("privacy_notice", "Privacy Notice"),
+        ("distribution_of_grades", "Distribution of Grades Policy"),
+        ("support_for_students", "Support for Students"),
+    ])
 
     return "\n".join(lines).rstrip() + "\n"

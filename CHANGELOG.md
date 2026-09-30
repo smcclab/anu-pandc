@@ -6,6 +6,29 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Class summaries now capture every section on the page. New fields:
+  `assessment_requirements`, `moderation_of_assessment`, `online_submission`,
+  `hardcopy_submission`, `returning_assignments`,
+  `resubmission_of_assignments`, `referencing_requirements`,
+  `staff_feedback`, `student_feedback`, `academic_integrity`, `policies`,
+  `privacy_notice`, `distribution_of_grades`, `support_for_students`, and
+  `contacts` (role, name, email, phone, consulting hours and research
+  interests for each convener and instructor).
+
+### Changed
+
+- Class summary section text, task descriptions and the overview are now
+  Markdown rather than plain text, so the links (to policies, procedures and
+  legislation, mostly), lists and emphasis on the page survive.
+
+### Fixed
+
+- A class summary with both Required and Recommended Resources lost the
+  required ones. They are now separate fields, `required_resources` and
+  `recommended_resources`.
+
 ## [0.4.0] — 2026-09-28
 
 ### Added

@@ -222,3 +222,119 @@ def test_markdown_no_llm_text():
     fixture_text = BeautifulSoup(fixture_text, "html.parser").get_text()
     for outcome in d["learning_outcomes"]:
         assert outcome[:30] in fixture_text
+
+
+# --- every section on the page ------------------------------------------------
+
+
+def test_every_h2_section_is_captured():
+    """Each prose <h2> on a class summary must land in some field.
+
+    A new section ANU adds to the template fails this until it is parsed.
+    """
+    from anu_pandc.parse.classes import _section_text
+
+    handled_elsewhere = {"class-schedule", "assessment-summary"}
+    for name in ("class_COMP1100_FirstSemester_3695", "class_COMP3900_SecondSemester_8846"):
+        s = soup(name)
+        d = parse_class(s, "X", "P", "1", "u")
+        values = [v for v in d.values() if isinstance(v, str) and v]
+        for h2 in s.find_all("h2", id=True):
+            hid = h2["id"]
+            if hid in handled_elsewhere or hid.startswith(("assessmenttask-", "contact_")):
+                continue
+            if h2.get_text(strip=True) == "Learning Outcomes":
+                continue
+            text = _section_text(s, hid, h2.get_text(strip=True))
+            assert text in values, f"{name}: section {hid!r} not captured"
+
+
+def test_moderation_of_assessment():
+    assert parsed_3900()["moderation_of_assessment"].startswith(
+        "Marks that are allocated during Semester are to be considered provisional"
+    )
+
+
+def test_required_and_recommended_resources_kept_apart():
+    d = parsed_3900()
+    assert d["required_resources"].startswith("You will need to bring a computing device")
+    assert d["recommended_resources"].startswith("There are a variety of online platforms")
+
+
+def test_policies_not_confused_with_learning_outcomes():
+    """Both headings share id="policies" on the live page."""
+    policies = parsed()["policies"]
+    assert policies.startswith("ANU has [educational policies, procedures and guidelines]")
+    assert "(https://policies.anu.edu.au/ppl/document/ANUP_000726)" in policies
+
+
+def test_contacts():
+    contacts = parsed_3900()["contacts"]
+    assert [c["role"] for c in contacts] == ["Convener", "Instructor"]
+    convener = contacts[0]
+    assert convener["name"] == "Charles Martin"
+    assert convener["email"] == "comp3900@anu.edu.au"
+    assert convener["phone"] == "61253139"
+    assert convener["consulting_hours"] == ["By Appointment", "Sunday"]
+    assert "human-computer interaction" in convener["research_interests"]
+
+
+def test_contact_without_phone():
+    convener = parsed()["contacts"][0]
+    assert convener["email"] == "comp1100@anu.edu.au"
+    assert convener["phone"] == ""
+
+
+def test_markdown_renders_new_sections():
+    md = class_to_markdown(parsed_3900(), "2026-01-01T00:00:00Z")
+    for heading in ("Moderation of Assessment", "Required Resources",
+                    "Recommended Resources", "Returning Assignments",
+                    "Online Submission", "Staff Feedback", "Contacts", "Policies"):
+        assert f"## {heading}" in md
+    assert "**Convener:** Charles Martin · comp3900@anu.edu.au · 61253139" in md
+
+
+# --- markdown in section text -------------------------------------------------
+
+
+def test_section_links_kept():
+    text = parsed()["extensions_and_penalties"]
+    assert "[Policy](https://policies.anu.edu.au/ppl/document/ANUP_004603)" in text
+
+
+def test_section_lists_kept():
+    assert "\n- written comments\n- verbal comments" in parsed()["staff_feedback"]
+
+
+def test_unclosed_bold_does_not_swallow_later_sections():
+    """``<b>Timetable webpage.<b></b>`` leaves a <b> open around every later h2."""
+    html = """<div>
+    <h2 id="tutorial-registration">Tutorial Registration</h2>
+    <p>See the <a href="https://mytimetable.anu.edu.au">Timetable</a> <b>Timetable webpage.<b></b>
+    <h2 id="assessment-summary">Assessment Summary</h2><p>summary</p>
+    <h2 id="participation">Participation</h2><ul><li>Attend</li></ul>
+    </div>"""
+    d = parse_class(BeautifulSoup(html, "html.parser"), "X", "P", "1", "u")
+    # The unclosed <b> wraps the next h2, so it is stepped into rather than
+    # rendered: its text survives, its emphasis does not.
+    assert d["tutorial_registration"] == (
+        "See the [Timetable](https://mytimetable.anu.edu.au) Timetable webpage."
+    )
+    assert d["participation"] == "- Attend"
+
+
+def test_task_description_keeps_links_and_lists():
+    html = """<div>
+    <h2 id="assessmenttask-1">Assessment Task 1</h2>
+    <div class="callout-box"><b>Value:</b> 10 %<br/></div>
+    <p><b>Quiz (Q)</b></p>
+    <p>See the <a href="/course/COMP1100">course page</a>.</p>
+    <ul><li>one</li><li>two</li></ul>
+    <h2 id="assessmenttask-2">Assessment Task 2</h2>
+    </div>"""
+    task = parse_class(BeautifulSoup(html, "html.parser"), "X", "P", "1", "u")["assessment_tasks"][0]
+    assert task["name"] == "Quiz (Q)"
+    assert task["value"] == "10 %"
+    assert task["description"] == (
+        "See the [course page](https://programsandcourses.anu.edu.au/course/COMP1100).\n\n- one\n- two"
+    )
