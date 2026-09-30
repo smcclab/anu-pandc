@@ -2,4 +2,4 @@
 Courses, the Policy Library, University legislation, the class and exam
 timetables and the university calendar — as Markdown, JSON or CSV."""
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
