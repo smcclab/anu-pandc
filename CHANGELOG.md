@@ -6,6 +6,14 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The rate limit is now a minimum gap measured from the end of the last
+  response, so the first request of a run and interactive use no longer pay for
+  a pause that has already elapsed. The default is 0.25 s (was a fixed 0.5 s
+  sleep before every request). With P&C's own ~0.7 s latency, requests still
+  start about a second apart.
+
 ## [0.5.0] — 2026-10-01
 
 ### Added

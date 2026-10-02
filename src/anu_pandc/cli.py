@@ -61,7 +61,7 @@ def _fail(message: str) -> None:
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(__version__, prog_name="anu-pandc")
 @click.option("--rate", type=float, default=None, metavar="SECONDS",
-              help="Pause between requests (default 0.5).")
+              help="Minimum gap between requests, in seconds (default 0.25).")
 @click.option("-v", "--verbose", is_flag=True, help="Show every fetch.")
 @click.option("-q", "--quiet", is_flag=True, help="Only show errors.")
 def cli(rate, verbose, quiet):

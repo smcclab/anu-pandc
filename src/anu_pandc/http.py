@@ -1,7 +1,8 @@
 """Fetching pages from the ANU sites this tool reads, politely.
 
-One session, a self-identifying User-Agent, and a small pause before every
-request so reading a few hundred pages does not hammer the ANU servers.
+One session, a self-identifying User-Agent, and a minimum gap between the end
+of one response and the start of the next request, so reading a few hundred
+pages does not hammer the ANU servers.
 
 Several hosts are involved. Programs & Courses is the original one; the policy
 library, MyTimetable, the exam timetable, the university calendar and the
@@ -40,8 +41,13 @@ DEFAULT_TIMEOUT = 30
 # arrives without any of them it more likely came from something in between.
 _ORIGIN_HEADERS = ("Request-Context", "ARRAffinity", "Set-Cookie")
 
-# Module-level so the CLI can turn it down for tests or up if asked to.
-rate_limit_seconds = 0.5
+# Minimum gap, in seconds, between the end of one response and the start of
+# the next request. Module-level so the CLI can turn it down for tests or up
+# if asked to. Measured from the response, not the request, so a slow server
+# never earns a faster rate; and the first request of a run never waits.
+rate_limit_seconds = 0.25
+
+_last_response_at: float | None = None
 
 _session: requests.Session | None = None
 
@@ -95,11 +101,22 @@ def _forbidden_hint(response: requests.Response) -> str:
     )
 
 
+def _pause() -> None:
+    """Sleep for whatever is left of the gap since the last response."""
+    if rate_limit_seconds and _last_response_at is not None:
+        remaining = rate_limit_seconds - (time.monotonic() - _last_response_at)
+        if remaining > 0:
+            time.sleep(remaining)
+
+
 def _request(method: str, url: str, **kwargs) -> requests.Response:
-    if rate_limit_seconds:
-        time.sleep(rate_limit_seconds)
+    global _last_response_at
+    _pause()
     kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
-    response = session().request(method, url, **kwargs)
+    try:
+        response = session().request(method, url, **kwargs)
+    finally:
+        _last_response_at = time.monotonic()
     if response.status_code == 403:
         raise Forbidden(_forbidden_hint(response), response=response)
     response.raise_for_status()

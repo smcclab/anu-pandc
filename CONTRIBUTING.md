@@ -34,7 +34,7 @@ already public on the P&C website.
 
 ## House rules
 
-- Be polite to the server. The default half-second rate limit and the
+- Be polite to the server. The default quarter-second rate limit and the
   identifying User-Agent in `src/anu_pandc/http.py` stay as they are; nothing
   should bypass `http.get()`.
 - The parsers take a BeautifulSoup tree and return plain dicts. Keep rendering

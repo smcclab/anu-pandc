@@ -91,9 +91,9 @@ For the latest unreleased changes, install from this repository instead:
 
 Best effort. It reads pages ANU changes without notice, so a P&C redesign will
 break it until the parsers are updated. It is polite by default: one session, a
-self-identifying User-Agent, and a half-second pause before every request. Turn
-that up with `--rate` when reading a lot at once, and please don't turn it down
-to zero against the live site.
+self-identifying User-Agent, and a quarter-second gap between one response and
+the next request. Turn that up with `--rate` when reading a lot at once, and
+please don't turn it down to zero against the live site.
 
 ## Running it elsewhere (sandboxes, CI, agents)
 
@@ -225,7 +225,7 @@ And, for the sources beyond P&C:
 | `exams [TERM...]` | Exam dates, times, reading and writing time, and rooms from the exam timetable, for course codes or a subject prefix (`COMP`). Searches every exam event open right now; `--event` narrows to one (its db number or words from its name), `--year` to one year. With no TERM, or `--list`, prints the open events. Most of the year nothing is published, and it says so. |
 | `calendar --year Y` | The university calendar: census dates, teaching breaks, exam periods, results, public holidays. `--ranges` pairs the begins/ends events; `--find WORD` narrows. |
 
-Global options: `--rate SECONDS` (pause between requests, default 0.5),
+Global options: `--rate SECONDS` (minimum gap between requests, default 0.25),
 `-v` to log every fetch, `-q` for errors only.
 
 ## Output tree
@@ -350,8 +350,8 @@ into date ranges.
   course pages exist.
 - Unknown codes return HTTP 200 with a "page doesn't exist" body. The tool
   detects that and reports an error rather than saving it.
-- Requests are rate-limited (0.5 s apart) and sent with an identifying
-  User-Agent. Please keep it that way.
+- Requests are rate-limited (0.25 s between one response and the next
+  request) and sent with an identifying User-Agent. Please keep it that way.
 
 ## Using it as a library
 

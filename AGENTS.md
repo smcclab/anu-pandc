@@ -87,6 +87,6 @@ for how to fix a parser when ANU changes a page.
 
 ## Etiquette
 
-One session, an identifying User-Agent, half a second between requests. Turn
-that up with `--rate` when reading a lot at once; please don't turn it down
-against the live site. If you are hand-fetching, pause between requests too.
+One session, an identifying User-Agent, a quarter of a second between one
+response and the next request. Turn that up with `--rate` when reading a lot
+at once; please don't turn it down against the live site. If you are hand-fetching, pause between requests too.
