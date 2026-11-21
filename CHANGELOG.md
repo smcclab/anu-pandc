@@ -41,6 +41,16 @@ All notable changes to this project are recorded here. The format follows
 - Markdown conversion dropped the space after an emphasised run that ended in
   one: `<strong>Note: </strong>text` came out as `**Note:**text`.
 
+## [0.5.1] — 2026-10-02
+
+### Changed
+
+- The rate limit is now a minimum gap measured from the end of the last
+  response, so the first request of a run and interactive use no longer pay for
+  a pause that has already elapsed. The default is 0.25 s (was a fixed 0.5 s
+  sleep before every request). With P&C's own ~0.7 s latency, requests still
+  start about a second apart.
+
 ## [0.5.0] — 2026-10-01
 
 ### Added
@@ -249,7 +259,8 @@ analysis repository into a standalone package.
 - A saved-tree layout (`DIR/<year>/…`) designed to be grepped, diffed and
   committed, with `--force` to re-fetch and a `scrape-log.md` audit trail.
 
-[Unreleased]: https://github.com/smcclab/anu-pandc/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/smcclab/anu-pandc/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/smcclab/anu-pandc/releases/tag/v0.5.1
 [0.5.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.5.0
 [0.4.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.4.0
 [0.3.1]: https://github.com/smcclab/anu-pandc/releases/tag/v0.3.1

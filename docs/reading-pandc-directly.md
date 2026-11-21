@@ -212,7 +212,7 @@ Start from today's date, then:
 ## 7. Etiquette
 
 This is a public university website with no published API contract. Pause
-between requests (the CLI uses half a second), don't fan out hundreds of
+between requests (the CLI waits a quarter of a second after each response), don't fan out hundreds of
 parallel fetches, and identify yourself in the User-Agent if your tool lets
 you. A whole COMP catalogue is 20 JSON requests; a whole year of COMP course
 pages is ~200 — do the former when it answers the question.

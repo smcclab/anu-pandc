@@ -101,3 +101,25 @@ def test_forbidden_reports_a_gateway_deny_reason_verbatim():
     message = str(caught.value)
     assert "host_not_allowed" in message
     assert "egress gateway" in message
+
+
+@resp.activate
+def test_rate_limit_is_a_gap_since_the_last_response(monkeypatch):
+    monkeypatch.setattr(http, "rate_limit_seconds", 1.0)
+    monkeypatch.setattr(http, "_last_response_at", None)
+    clock = [100.0]
+    slept = []
+    monkeypatch.setattr(http.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(http.time, "sleep", lambda s: slept.append(s))
+    resp.add(resp.GET, "https://example.com", body="<html></html>")
+
+    http.get("https://example.com")
+    assert slept == []                  # the first request never waits
+
+    clock[0] += 0.4                     # parsing took a while
+    http.get("https://example.com")
+    assert slept == [pytest.approx(0.6)]  # only the remainder of the gap
+
+    clock[0] += 2.0                     # the gap has long elapsed
+    http.get("https://example.com")
+    assert len(slept) == 1              # no sleep at all
