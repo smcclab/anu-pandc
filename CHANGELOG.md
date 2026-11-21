@@ -6,6 +6,8 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-11-21
+
 ### Added
 
 - Program pages now capture admission requirements (#3). The new `admission`
@@ -259,7 +261,8 @@ analysis repository into a standalone package.
 - A saved-tree layout (`DIR/<year>/…`) designed to be grepped, diffed and
   committed, with `--force` to re-fetch and a `scrape-log.md` audit trail.
 
-[Unreleased]: https://github.com/smcclab/anu-pandc/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/smcclab/anu-pandc/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.6.0
 [0.5.1]: https://github.com/smcclab/anu-pandc/releases/tag/v0.5.1
 [0.5.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.5.0
 [0.4.0]: https://github.com/smcclab/anu-pandc/releases/tag/v0.4.0
