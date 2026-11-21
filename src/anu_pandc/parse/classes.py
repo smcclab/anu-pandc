@@ -8,12 +8,11 @@ plus an Examination(s) section, class schedule, and convener info.
 URL pattern: /course/{CODE}/{Period}/{ClassNumber}
 e.g. /course/COMP1100/First%20Semester/3695
 """
-import copy
 import re
 
 from bs4 import BeautifulSoup, Tag
 
-from anu_pandc.parse.html_md import to_markdown
+from anu_pandc.parse.html_md import nodes_to_markdown, section_nodes as _section_nodes, to_markdown
 
 
 # ---- helpers -----------------------------------------------------------------
@@ -93,37 +92,9 @@ def _section_after(soup: BeautifulSoup, h2_id: str, title: str = "") -> Tag | No
 BASE_URL = "https://programsandcourses.anu.edu.au"
 
 
-def _section_nodes(h2: Tag) -> list:
-    """The top-level nodes between ``h2`` and the next ``<h2>``, in document order.
-
-    ANU class pages occasionally contain malformed markup — e.g.
-    ``<b>Timetable webpage.<b></b>`` leaves a ``<b>`` unclosed, so html.parser
-    nests every later section (Assessment Summary, Policies, …) inside it. A
-    sibling-only scan would then slurp that whole blob into "Tutorial
-    Registration". Walking document order, stepping *into* any element that
-    contains the next ``<h2>`` and stopping at it, keeps the section to its
-    real content.
-    """
-    stop = h2.find_next("h2")
-    wraps_stop = {id(p) for p in stop.parents} if stop else set()
-    nodes: list = []
-    for el in h2.next_elements:
-        if el is stop:
-            break
-        if h2 in el.parents or (nodes and nodes[-1] in el.parents):
-            continue
-        if id(el) in wraps_stop:
-            continue
-        nodes.append(el)
-    return nodes
-
-
 def _section_markdown(nodes: list) -> str:
     """Render section nodes as Markdown, keeping links, lists and emphasis."""
-    frag = BeautifulSoup("<div></div>", "html.parser").div
-    for node in nodes:
-        frag.append(copy.copy(node))
-    return to_markdown(frag, BASE_URL)
+    return nodes_to_markdown(nodes, BASE_URL)
 
 
 def _section_text(soup: BeautifulSoup, h2_id: str, title: str = "") -> str:

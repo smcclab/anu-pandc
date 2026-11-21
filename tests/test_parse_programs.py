@@ -112,3 +112,102 @@ def test_markdown_has_introduction_section():
     md = program_to_markdown(data, "2026-01-01T00:00:00Z")
     assert "## Introduction" in md
     assert "Bachelor of Computing program" in md
+
+
+# --- admission (the "Admission & Fees" tab) ---
+
+def _admission(name: str = "program_BCOMP") -> dict:
+    html = (FIXTURE.parent / f"{name}.html").read_text(encoding="utf-8")
+    return parse_program(BeautifulSoup(html, "html.parser"), "X", "https://example.com")["admission"]
+
+
+def test_admission_ranks():
+    adm = _admission()
+    assert adm["atar"] == 80
+    assert adm["ib"] == 30
+    assert adm["ranks"] == {"ATAR": "80", "International Baccalaureate": "30"}
+
+
+def test_admission_program_with_a_prerequisite_subject():
+    adm = _admission()
+    assert adm["prerequisite_subjects"]["NSW"] == "HSC Mathematics Advanced or equivalent."
+    assert adm["prerequisite_subjects"]["SA/NT"] == "Mathematical Methods or equivalent"
+    assert set(adm["prerequisite_subjects"]) == {"ACT", "NSW", "VIC", "QLD", "TAS", "SA/NT", "WA", "IB"}
+    assert "NSW: HSC Mathematics Advanced" in adm["sections"]["Prerequisites"]
+
+
+def test_admission_program_without_a_prerequisite_subject():
+    adm = _admission("program_BARTS_2027_admission")
+    assert adm["atar"] == 80 and adm["ib"] == 31
+    assert adm["prerequisite_subjects"] == {}
+    assert "Prerequisites" not in adm["sections"]
+    assert list(adm["sections"]) == ["Admission Requirements", "Adjustment Factors"]
+
+
+def test_admission_sections_keep_the_raw_text_and_stop_at_fees():
+    sections = _admission()["sections"]
+    assert list(sections) == ["Admission Requirements", "Prerequisites", "Adjustment Factors"]
+    text = sections["Admission Requirements"]
+    assert text.startswith("At a minimum, all applicants must meet")
+    assert "**Domestic applicants**" in text
+    # The ATAR box floats inside this section; the fees box follows the last one.
+    assert "Baccalaureate" not in text
+    assert all("Indicative fee" not in t and "Scholarships" not in t for t in sections.values())
+
+
+def test_admission_english_policy_link():
+    assert _admission()["english_policy_url"] == "https://policies.anu.edu.au/ppl/document/ANUP_000408"
+
+
+_POSTGRAD = """
+<div id="admission-and-fees" class="tab-content"><div class="body__inner w-doublewide copy">
+<h2 id="admission-requirements">Admission Requirements</h2>
+<p>Applicants must present one of the following:</p>
+<ul><li>A Bachelor degree or international equivalent with a minimum GPA of 5.0/7.0</li></ul>
+<h2 id="pathways">Pathways</h2><p>GCDP- <a href="/2025/program/6706XGDCP">Graduate Diploma of Computing</a></p>
+<div id="indicative-fees" class="callout-box callout-box--right">
+  <div class="callout-box__header"><h2 class="callout-box__title">Indicative fees</h2></div>
+  <dl><dt>Annual indicative fee for international students</dt><dd>$56,120.00</dd></dl>
+</div>
+<h2 id="feeInformation">Fee Information</h2><p>All students are required to pay the SA Fee</p>
+</div></div>
+"""
+
+
+def test_admission_postgraduate_has_no_ranks():
+    adm = parse_program(BeautifulSoup(_POSTGRAD, "html.parser"), "X", "u")["admission"]
+    assert adm["atar"] is None and adm["ib"] is None and adm["ranks"] == {}
+    assert list(adm["sections"]) == ["Admission Requirements", "Pathways"]
+    assert "minimum GPA of 5.0/7.0" in adm["sections"]["Admission Requirements"]
+    assert adm["sections"]["Pathways"] == (
+        "GCDP- [Graduate Diploma of Computing](https://programsandcourses.anu.edu.au/2025/program/6706XGDCP)")
+
+
+def test_admission_loose_prerequisites_are_left_as_text():
+    # The Diploma of Computing: two jurisdictions in one sentence, not a list.
+    html = """<div id="admission-and-fees" class="tab-content">
+    <h2 id="admission-requirements">Admission Requirements</h2><p>For admission to this program...</p>
+    <h2 id="prerequisites">Prerequisites</h2>
+    <p>There are no formal program prerequisites. But assumed knowledge is:</p>
+    <ul><li>ACT: Mathematical Methods (Major) or NSW: HSC Mathematics Advanced or equivalent.</li></ul>
+    </div>"""
+    adm = parse_program(BeautifulSoup(html, "html.parser"), "X", "u")["admission"]
+    assert adm["prerequisite_subjects"] == {}
+    assert "no formal program prerequisites" in adm["sections"]["Prerequisites"]
+
+
+def test_admission_absent_on_a_page_without_the_tab():
+    html = '<div id="study"><div class="body__inner w-doublewide copy"><p>48 units from</p></div></div>'
+    data = parse_program(BeautifulSoup(html, "html.parser"), "COMS-MAJ", "u")
+    assert data["admission"] == {}
+    assert "Admission" not in program_to_markdown(data | {"title": "T"}, "2026-01-01T00:00:00")
+
+
+def test_markdown_has_admission_section_after_the_requirements():
+    data = parse_program(soup(), "BCOMP", "https://example.com")
+    md = program_to_markdown(data, "2026-01-01T00:00:00")
+    assert "## Admission Requirements\n\n- **ATAR:** 80\n- **International Baccalaureate:** 30\n" in md
+    assert "### Prerequisites\n\nACT: Mathematical Methods" in md
+    assert md.index("## Admission Requirements") > md.index("## Minors")
+    # The page's own top heading is not repeated as a sub-heading.
+    assert "### Admission Requirements" not in md

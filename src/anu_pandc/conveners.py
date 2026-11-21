@@ -1,9 +1,15 @@
 """Who convened what: one row per saved class-summary page.
 
-The convener is published only on class summary pages, so this walks the
+The class summary is the record of who convened a class, so this walks the
 ``classes/`` directories of a saved tree and emits a table. Name normalisation
 strips honorifics and splits multiple names onto "; ". P&C is inconsistent
 about some people's names; pass an aliases mapping to collapse them.
+
+A course page can also name a convener, and does so before any class summary
+exists for that year. Where a saved course has no class row for its year, it
+gets one row from the course page instead, with ``source`` "course" rather
+than "class". That row is for the course-year: the page does not say which
+sitting the name belongs to, so semester, class and lecturer are blank.
 
 Verify a multi-name cell before using it for per-person totals: it can be
 genuine co-convening or convener-plus-guest, and the page does not distinguish.
@@ -17,7 +23,7 @@ from pathlib import Path
 from anu_pandc.store import Store
 
 FIELDS = ["year", "course", "semester", "class_id",
-          "convener_raw", "convener_normalized", "lecturer_raw"]
+          "convener_raw", "convener_normalized", "lecturer_raw", "source"]
 
 SEMESTER_SHORT = {"FirstSemester": "S1", "SecondSemester": "S2",
                   "SummerSession": "Summer", "AutumnSession": "Autumn",
@@ -58,7 +64,7 @@ def normalize(raw: str, aliases: dict[str, str] | None = None) -> str:
 
 
 def _field(text: str, name: str) -> str:
-    m = re.search(r"\*\*%s:\*\* (.+)" % name, text)
+    m = re.search(r"^- \*\*%s:\*\* (.+)" % name, text, re.M)
     return m.group(1).strip() if m else ""
 
 
@@ -79,6 +85,24 @@ def row_from_class_markdown(path: Path, year: str, aliases: dict[str, str] | Non
         "convener_raw": convener,
         "convener_normalized": normalize(convener, aliases),
         "lecturer_raw": _field(text, "Lecturer"),
+        "source": "class",
+    }
+
+
+def row_from_course_markdown(path: Path, year: str, aliases: dict[str, str] | None = None) -> dict | None:
+    """A course-year row from a saved course page, or None if it names no convener."""
+    convener = _field(path.read_text(encoding="utf-8"), "Convener")
+    if not convener:
+        return None
+    return {
+        "year": year,
+        "course": path.stem,
+        "semester": "",
+        "class_id": "",
+        "convener_raw": convener,
+        "convener_normalized": normalize(convener, aliases),
+        "lecturer_raw": "",
+        "source": "course",
     }
 
 
@@ -91,18 +115,33 @@ def collect(store: Store, prefix: str | None = None, year: str | None = None,
         row = row_from_class_markdown(path, path.parent.parent.name, aliases)
         if row:
             rows.append(row)
+
+    # Fall back to the course page for any course-year with no class row.
+    have_class = {(r["year"], r["course"]) for r in rows}
+    years = [str(year)] if year else sorted(
+        d.name for d in store.root.glob("[12][0-9][0-9][0-9]") if d.is_dir())
+    for y in years:
+        for path in store.course_files(y):
+            if prefix and not path.name.startswith(prefix.upper()):
+                continue
+            if (y, path.stem) in have_class:
+                continue
+            row = row_from_course_markdown(path, y, aliases)
+            if row:
+                rows.append(row)
+
     rows.sort(key=lambda r: (r["year"], r["semester"], r["course"], r["class_id"]))
     return rows
 
 
 def conveners_to_markdown(rows: list[dict]) -> str:
     lines = [
-        "| Year | Course | Semester | Class | Convener | Lecturer |",
-        "|------|--------|----------|-------|----------|----------|",
+        "| Year | Course | Semester | Class | Convener | Lecturer | Source |",
+        "|------|--------|----------|-------|----------|----------|--------|",
     ]
     for r in rows:
         lines.append(
             f"| {r['year']} | {r['course']} | {r['semester']} | {r['class_id']} | "
-            f"{r['convener_normalized']} | {r['lecturer_raw']} |"
+            f"{r['convener_normalized']} | {r['lecturer_raw']} | {r.get('source', 'class')} |"
         )
     return "\n".join(lines) + "\n"

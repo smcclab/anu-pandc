@@ -12,9 +12,10 @@ text, so a markup change loses formatting rather than content.
 """
 from __future__ import annotations
 
+import copy
 import re
 
-from bs4 import NavigableString, Tag
+from bs4 import BeautifulSoup, NavigableString, Tag
 from bs4.element import PreformattedString
 
 _BLOCK = {"p", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li",
@@ -66,7 +67,10 @@ def inline(node, base_url: str = "") -> str:
     inner = "".join(inline(c, base_url) for c in node.children)
     marker = _INLINE_EMPHASIS.get(node.name)
     if marker and _clean(inner):
-        return f"{marker}{_clean(inner)}{marker}"
+        # "<strong>Note: </strong>text" keeps its space, outside the markers.
+        lead = " " if inner[:1].isspace() else ""
+        trail = " " if inner[-1:].isspace() else ""
+        return f"{lead}{marker}{_clean(inner)}{marker}{trail}"
     return inner
 
 
@@ -220,3 +224,55 @@ def to_markdown(root: Tag, base_url: str = "", heading_offset: int = 0) -> str:
         if block and (not out or out[-1] != block):
             out.append(block)
     return "\n\n".join(out).strip()
+
+
+def section_nodes(h2: Tag) -> list:
+    """The top-level nodes between ``h2`` and the next ``<h2>``, in document order.
+
+    P&C pages occasionally contain malformed markup — e.g.
+    ``<b>Timetable webpage.<b></b>`` leaves a ``<b>`` unclosed, so html.parser
+    nests every later section (Assessment Summary, Policies, …) inside it. A
+    sibling-only scan would then slurp that whole blob into "Tutorial
+    Registration". Walking document order, stepping *into* any element that
+    contains the next ``<h2>`` and stopping at it, keeps the section to its
+    real content.
+    """
+    stop = h2.find_next("h2")
+    wraps_stop = {id(p) for p in stop.parents} if stop else set()
+    nodes: list = []
+    for el in h2.next_elements:
+        if el is stop:
+            break
+        if h2 in el.parents or (nodes and nodes[-1] in el.parents):
+            continue
+        if id(el) in wraps_stop:
+            continue
+        nodes.append(el)
+    return nodes
+
+
+def nodes_to_markdown(nodes: list, base_url: str = "", heading_offset: int = 0) -> str:
+    """Render section nodes as Markdown, keeping links, lists and emphasis."""
+    frag = BeautifulSoup("<div></div>", "html.parser").div
+    for node in nodes:
+        frag.append(copy.copy(node))
+    return to_markdown(frag, base_url, heading_offset)
+
+
+def section_markdown(h2: Tag, base_url: str = "", heading_offset: int = 0) -> str:
+    """Markdown for the prose under ``h2`` on a P&C course or program page.
+
+    Stays inside the tab the heading is in: the last section of a tab would
+    otherwise run on through the page furniture to the next tab's first
+    heading. Callout boxes (the ATAR box, the fees box) float inside a section
+    without belonging to its prose, and are left out.
+    """
+    tab = h2.find_parent("div", class_="tab-content")
+    nodes = []
+    for node in section_nodes(h2):
+        if tab is not None and not any(p is tab for p in node.parents):
+            continue
+        if isinstance(node, Tag) and "callout-box" in (node.get("class") or []):
+            continue
+        nodes.append(node)
+    return nodes_to_markdown(nodes, base_url, heading_offset)

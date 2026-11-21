@@ -144,7 +144,12 @@ def test_catalogue_saves_table_and_merges_teaching_codes(tmp_path):
     assert (tmp_path / "2026/catalogue-COMP.md").read_text().startswith("# COMP course catalogue 2026")
     csv_text = (tmp_path / "2026/catalogue-COMP.csv").read_text()
     assert csv_text.splitlines()[0] == "code,title,career,units,sessions"
-    assert "COMP8900F,Thesis,Research,24,Not offered" in csv_text
+    # A blank search Session stays blank; it is not evidence of "not offered".
+    assert "COMP8900F,Thesis,Research,24,\n" in csv_text
+    md_text = (tmp_path / "2026/catalogue-COMP.md").read_text()
+    assert "Not offered" not in md_text
+    assert "| COMP8900F | Thesis | Research | 24 |  |" in md_text
+    assert "A blank Sessions cell means the search index lists no session" in md_text
     # Research shells stay out of the teaching list by default.
     assert (tmp_path / "2026/course-codes.txt").read_text() == "COMP1100\n"
 
@@ -185,7 +190,7 @@ def test_conveners_from_tree(tmp_path):
         "# x\n\n- **Convener:** Dr Jane Smith\n- **Lecturer:** Dr Jane Smith\n")
     r = run("conveners", "--from", str(tmp_path))
     assert r.exit_code == 0, r.stderr
-    assert r.stdout.splitlines()[1] == "2026,COMP1100,S1,3695,Dr Jane Smith,Jane Smith,Dr Jane Smith"
+    assert r.stdout.splitlines()[1] == "2026,COMP1100,S1,3695,Dr Jane Smith,Jane Smith,Dr Jane Smith,class"
 
 
 def test_url_command():

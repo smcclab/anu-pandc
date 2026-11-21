@@ -6,6 +6,41 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Program pages now capture admission requirements (#3). The new `admission`
+  field holds every section of the Admission & Fees tab ahead of the fees, as
+  Markdown under `sections`, plus `atar`, `ib` and `ranks` from the selection
+  rank box, `prerequisite_subjects` by jurisdiction, and
+  `english_policy_url`. Rendered as an "Admission Requirements" section at the
+  end of the program Markdown. Subplan pages have no admission tab and get
+  `{}`.
+- Course pages now capture `assumed_knowledge` and `other_information` (#3),
+  as Markdown, each rendered as its own section. These are where a course
+  records an expectation that is not a formal requisite — the school
+  mathematics a first-year course assumes, say — so `prerequisites: None` no
+  longer has to be read as "expects nothing".
+- Course pages now capture `convener` (#2), the names under "Course
+  convener" in the summary box, rendered as a `- **Convener:**` line. A course
+  page can name next year's convener before any class summary exists.
+- `conveners` falls back to the course page (#2). A saved course with no
+  class row for its year gets one row from the course page, where it names a
+  convener, with semester, class and lecturer blank. Every row has a new
+  `source` column, `class` or `course`, added as the last column.
+
+### Changed
+
+- `catalogue` no longer writes "Not offered" when the search API returns a
+  blank `Session` (#1). The cell is left blank, in Markdown, CSV and JSON, and
+  the Markdown header says what a blank means. A blank only ever meant the
+  search index listed no session, and the index can lag the course pages.
+  **Anything matching the string "Not offered" needs updating.**
+
+### Fixed
+
+- Markdown conversion dropped the space after an emphasised run that ended in
+  one: `<strong>Note: </strong>text` came out as `**Note:**text`.
+
 ## [0.5.0] — 2026-10-01
 
 ### Added

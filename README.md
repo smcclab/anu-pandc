@@ -208,7 +208,7 @@ redirect.
 | `classes [CODE...] --year Y` | Fetch class summary pages. All periods by default; `--period "First Semester"` to narrow. With no code and `--save`, uses the saved code list. |
 | `catalogue PREFIX --year Y` | Every course under a subject prefix via the search API. `-f md/csv/json`. Saving also adds the teaching codes to `course-codes.txt` (`--include-research` to add HDR shells too). |
 | `offerings --year Y` | Planned sittings per course, split by offering year. Reads saved pages with `--from DIR` or fetches the codes given. `-f csv/md/json`. |
-| `conveners --from DIR` | Convener and lecturer per saved class. `--aliases FILE` to merge name variants. |
+| `conveners --from DIR` | Convener and lecturer per saved class. A saved course with no class that year gets one row from its course page instead (`source` = `course`, no semester or class). `--aliases FILE` to merge name variants. |
 | `url CODE... --year Y` | Just print the P&C URLs. |
 
 And, for the sources beyond P&C:
@@ -268,7 +268,9 @@ write `.json` files with the same names. Existing files are skipped unless
 
 **Course pages**: title, units, level, prerequisites and incompatibilities
 (split heuristically, with the raw requisite text preserved), co-taught
-codes, description, learning outcomes, indicative assessment with weights, and
+codes, the convener where the page names one, description, learning outcomes, the Assumed Knowledge and Other
+Information sections (where a course states what it expects that is not a
+formal requisite), indicative assessment with weights, and
 the "Offered in" table (year, session, mode, class number, summary link, and
 the advertised topic title for special-topics shells such as COMP4011), and
 the Fees tab (student contribution band, EFTSL, and domestic and international
@@ -276,7 +278,13 @@ fee-paying tuition for the page's year).
 
 **Program and subplan pages**: title, total units, introduction, learning
 outcomes, requirement groups as tables of courses, and the list of
-majors/minors/specialisations offered.
+majors/minors/specialisations offered. Program pages also give `admission`:
+every section of the Admission & Fees tab up to the fees (Admission
+Requirements, Prerequisites, Pathways, Cognate Disciplines, Adjustment
+Factors — whichever the program has) as Markdown, plus the ATAR and
+International Baccalaureate ranks, the prerequisite school subjects by
+jurisdiction, and the English-language policy the page links to. A program
+with no Prerequisites section has no subject prerequisite.
 
 **Class summary pages**: every section on the page. Convener and lecturer
 (with email, phone, consulting hours and research interests), mode, start/end/
