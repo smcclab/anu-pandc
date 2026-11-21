@@ -441,9 +441,9 @@ def offerings(codes_, year, from_dir, prefix, formats, save_dir, plain):
 # ---- conveners ---------------------------------------------------------------
 
 
-@cli.command(short_help="Who convened each saved class.")
+@cli.command(short_help="Who convened each saved class or course.")
 @click.option("--from", "from_dir", type=click.Path(exists=True, file_okay=False), required=True,
-              help="Saved tree whose <year>/classes/ pages to read.")
+              help="Saved tree whose <year>/classes/ and <year>/courses/ pages to read.")
 @click.option("--year", "-y", help="Only this year (default: every year in the tree).")
 @click.option("--prefix", help="Only courses with this subject prefix.")
 @click.option("--aliases", type=click.Path(exists=True, dir_okay=False),
@@ -454,12 +454,18 @@ def offerings(codes_, year, from_dir, prefix, formats, save_dir, plain):
 def conveners(from_dir, year, prefix, aliases, formats, output, plain):
     """Table of who convened each saved class (from class summary pages).
 
-    Run `classes ... --save DIR` first; this reads DIR, it does not fetch.
+    A saved course with no class row for its year gets one row from the
+    course page instead, where that page names a convener: source "course",
+    with no semester, class or lecturer. That is how a next-year convener
+    shows up before the class summaries exist.
+
+    Run `classes ... --save DIR` and/or `get ... --save DIR` first; this
+    reads DIR, it does not fetch.
     """
     formats = _formats(formats, default="csv")
     rows = collect_conveners(Store(from_dir), prefix, year, load_aliases(aliases))
     if not rows:
-        _fail(f"no class pages with a convener under {from_dir}")
+        _fail(f"no class or course pages with a convener under {from_dir}")
     renders = {
         "csv": lambda: rows_to_csv(rows, CONVENER_FIELDS),
         "json": lambda: rows_to_json(rows),

@@ -2,6 +2,10 @@
 import re
 from bs4 import BeautifulSoup
 
+from anu_pandc.parse.html_md import section_markdown
+
+BASE_URL = "https://programsandcourses.anu.edu.au"
+
 
 def _get_title(soup: BeautifulSoup) -> str:
     """Extract the course title from h1.intro__degree-title."""
@@ -133,6 +137,27 @@ def _get_cotaught(soup: BeautifulSoup) -> list[str]:
     return list(dict.fromkeys(codes))  # deduplicate, preserve order
 
 
+def _get_convener(soup: BeautifulSoup) -> list[str]:
+    """Names under "Course convener" in the summary box, or [] if absent.
+
+    The course page can name a convener for a year before any class summary
+    exists for it, which makes this the earliest place a next-year convener
+    appears. It is optional and not stable: a page can show it one month and
+    not the next. The page renders the summary twice (mobile and desktop), so
+    names are deduplicated.
+    """
+    names: list[str] = []
+    for li in soup.find_all("li", class_="degree-summary__code"):
+        heading = li.find("span", class_="degree-summary__code-heading")
+        if not heading or "course convener" not in heading.get_text(strip=True).lower():
+            continue
+        for span in li.select("ul li span.degree-summary__code-text"):
+            name = span.get_text(" ", strip=True)
+            if name and name not in names:
+                names.append(name)
+    return names
+
+
 def _get_offerings(soup: BeautifulSoup) -> list[dict]:
     """Extract future offering information from the #class tab.
 
@@ -254,6 +279,21 @@ def _get_assessment(soup: BeautifulSoup) -> list[dict]:
     return items
 
 
+def _get_section(soup: BeautifulSoup, h2_id: str) -> str:
+    """Markdown for an optional prose section ("" when the page has none).
+
+    "Assumed Knowledge" and "Other Information" are where a course records
+    what it expects of a student that is not a formal requisite. A
+    first-semester 1000-level course cannot carry a requisite at all, so
+    "Prerequisites: None" on its own reads as "no expectation" when the page
+    says otherwise. Which of the two headings a convener used varies:
+    COMP1100 states its school mathematics under Assumed Knowledge, MATH1013
+    under Other Information.
+    """
+    h2 = soup.find("h2", id=h2_id)
+    return section_markdown(h2, BASE_URL, heading_offset=1) if h2 else ""
+
+
 def _get_fees(soup: BeautifulSoup) -> dict:
     """The Fees tab: contribution band, EFTSL, and fee-paying tuition by year.
 
@@ -300,8 +340,8 @@ def parse_course(soup: BeautifulSoup, code: str, url: str) -> dict:
     Parse an ANU course page into a structured dict.
 
     Returns keys: code, url, title, units, level, prerequisites,
-    incompatibilities, description, learning_outcomes, assessment,
-    offerings, fees.
+    incompatibilities, cotaught, convener, description, learning_outcomes, assumed_knowledge,
+    other_information, assessment, offerings, fees.
     """
     title = _get_title(soup)
     units = _get_units(soup)
@@ -326,8 +366,11 @@ def parse_course(soup: BeautifulSoup, code: str, url: str) -> dict:
         "incompatibilities": incompatibilities,
         "requisite_raw": requisite_raw,
         "cotaught": cotaught,
+        "convener": _get_convener(soup),
         "description": description,
         "learning_outcomes": learning_outcomes,
+        "assumed_knowledge": _get_section(soup, "assumed-knowledge"),
+        "other_information": _get_section(soup, "other-information"),
         "assessment": assessment,
         "offerings": offerings,
         "fees": fees,
@@ -373,6 +416,9 @@ def course_to_markdown(data: dict, scraped_at: str) -> str:
     cotaught = data.get("cotaught", [])
     if cotaught:
         lines.append(f"- **Co-taught with:** {', '.join(cotaught)}")
+    convener = data.get("convener", [])
+    if convener:
+        lines.append(f"- **Convener:** {', '.join(convener)}")
     offerings = data.get("offerings", [])
     if offerings:
         # Compact: "2027 First Semester (In Person, class 3695) — Topic title"
@@ -409,6 +455,11 @@ def course_to_markdown(data: dict, scraped_at: str) -> str:
         for i, outcome in enumerate(learning_outcomes, 1):
             lines.append(f"{i}. {outcome}")
         lines.append("")
+
+    for key, heading in (("assumed_knowledge", "Assumed Knowledge"),
+                         ("other_information", "Other Information")):
+        if data.get(key):
+            lines += [f"## {heading}", "", data[key], ""]
 
     assessment = data.get("assessment", [])
     if assessment:

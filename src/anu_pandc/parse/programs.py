@@ -2,6 +2,10 @@
 import re
 from bs4 import BeautifulSoup, Tag
 
+from anu_pandc.parse.html_md import section_markdown
+
+BASE_URL = "https://programsandcourses.anu.edu.au"
+
 # Matches /YYYY/course/COMP1100 style hrefs (any 4-digit year)
 _COURSE_HREF_RE = re.compile(r"/\d{4}/course/([A-Z]{2,4}\d{4}[A-Z]?)")
 
@@ -205,6 +209,107 @@ def _get_learning_outcomes(soup: BeautifulSoup) -> list[str]:
     return []
 
 
+# The Admission & Fees tab runs straight on into fees and scholarships.
+_NOT_ADMISSION = {"feeinformation", "scholarships"}
+
+_JURISDICTION = r"(?:ACT|NSW|VIC|QLD|TAS|SA|NT|WA|IB)"
+# "NSW: HSC Mathematics Advanced or equivalent." / "SA / NT: Mathematical Methods"
+_SUBJECT_LINE_RE = re.compile(rf"^({_JURISDICTION}(?:\s*/\s*{_JURISDICTION})*)\s*:\s*(\S.*)$")
+_ANOTHER_JURISDICTION_RE = re.compile(rf"\b{_JURISDICTION}\s*:")
+
+
+def _prerequisite_subjects(h2: Tag) -> dict[str, str]:
+    """School subjects by jurisdiction, where the page lists them one per line.
+
+    Returns {} for anything looser — the Diploma of Computing runs two
+    jurisdictions into one sentence under "no formal prerequisites, but
+    assumed knowledge is" — and leaves that to the section text.
+    """
+    subjects: dict[str, str] = {}
+    for el in h2.find_next_siblings():
+        if el.name == "h2":
+            break
+        if el.name not in ("p", "li"):
+            continue
+        m = _SUBJECT_LINE_RE.match(el.get_text(" ", strip=True).replace("\xa0", " "))
+        if not m:
+            continue
+        if _ANOTHER_JURISDICTION_RE.search(m.group(2)):
+            return {}
+        subjects[re.sub(r"\s*/\s*", "/", m.group(1))] = m.group(2).strip()
+    return subjects
+
+
+def _to_int(text: str) -> int | None:
+    m = re.search(r"\d+", text)
+    return int(m.group()) if m else None
+
+
+def _get_admission(soup: BeautifulSoup) -> dict:
+    """The admission half of the "Admission & Fees" tab, or {} if there is none.
+
+    ``sections`` maps each heading on the tab to its text as Markdown, in page
+    order, and is the complete record: "Admission Requirements" always, then
+    whichever of "Prerequisites", "Pathways", "Cognate Disciplines" and
+    "Adjustment Factors" the program has. Headings are not a fixed set, so
+    they are kept as found rather than mapped onto named fields.
+
+    The rest is parsed out only where the page is regular enough to trust:
+
+    - ``ranks``: the ATAR / International Baccalaureate box, as printed.
+      Undergraduate programs only; ``atar`` and ``ib`` are the same as ints.
+    - ``prerequisite_subjects``: school subjects by jurisdiction. No
+      "Prerequisites" heading means the program has no subject prerequisite.
+    - ``english_policy_url``: the English-language policy the page points to.
+      Program pages state no scores of their own; the policy holds them.
+
+    Subplan pages have no admission tab.
+    """
+    tab = soup.find("div", id="admission-and-fees")
+    if not tab:
+        return {}
+
+    sections: dict[str, str] = {}
+    subjects: dict[str, str] = {}
+    for h2 in tab.find_all("h2", id=True):
+        if h2["id"].lower() in _NOT_ADMISSION:
+            continue
+        title = h2.get_text(" ", strip=True)
+        text = section_markdown(h2, BASE_URL, heading_offset=1)
+        if not title or not text:
+            continue
+        sections[title] = text
+        if h2["id"] == "prerequisites":
+            subjects = _prerequisite_subjects(h2)
+    if not sections:
+        return {}
+
+    ranks: dict[str, str] = {}
+    for box in tab.find_all("div", class_="callout-box"):
+        if box.get("id") == "indicative-fees" or box.find_parent(id="indicative-fees"):
+            continue
+        for dt in box.find_all("dt"):
+            dd = dt.find_next_sibling("dd")
+            label = dt.get_text(" ", strip=True).rstrip(":").strip()
+            if dd and label:
+                ranks[label] = dd.get_text(" ", strip=True)
+
+    english = ""
+    for a in tab.find_all("a", href=True):
+        if "english" in a.get_text(" ", strip=True).lower() and "policies.anu.edu.au" in a["href"]:
+            english = a["href"].strip()
+            break
+
+    return {
+        "atar": _to_int(ranks.get("ATAR", "")),
+        "ib": _to_int(ranks.get("International Baccalaureate", "")),
+        "ranks": ranks,
+        "prerequisite_subjects": subjects,
+        "english_policy_url": english,
+        "sections": sections,
+    }
+
+
 def _all_course_codes(soup: BeautifulSoup) -> list[str]:
     """
     Collect all course codes found via /2026/course/ links throughout the page.
@@ -223,7 +328,8 @@ def parse_program(soup: BeautifulSoup, code: str, url: str) -> dict:
     """
     Parse an ANU program page into a structured dict.
 
-    Returns keys: code, url, title, min_units, requirements, specialisations,
+    Returns keys: code, url, title, min_units, introduction,
+    learning_outcomes, requirements, specialisations, admission,
     all_course_codes.
     """
     title = _get_title(soup)
@@ -247,6 +353,7 @@ def parse_program(soup: BeautifulSoup, code: str, url: str) -> dict:
         "learning_outcomes": learning_outcomes,
         "requirements": requirements,
         "specialisations": specialisations,
+        "admission": _get_admission(soup),
         "all_course_codes": all_codes,
     }
 
@@ -312,5 +419,20 @@ def program_to_markdown(data: dict, scraped_at: str, year: str | None = None) ->
         for item in spec["items"]:
             lines.append(f"- {item['name']} ({item['code']})")
         lines.append("")
+
+    # Last, so the untitled program-requirement text above is not read as
+    # sitting under this heading.
+    admission = data.get("admission") or {}
+    if admission.get("sections"):
+        lines += ["## Admission Requirements", ""]
+        facts = [f"- **{label}:** {value}" for label, value in admission.get("ranks", {}).items()]
+        if admission.get("english_policy_url"):
+            facts.append(f"- **English language policy:** {admission['english_policy_url']}")
+        if facts:
+            lines += [*facts, ""]
+        for title, text in admission["sections"].items():
+            if title.lower() != "admission requirements":
+                lines += [f"### {title}", ""]
+            lines += [text, ""]
 
     return "\n".join(lines)

@@ -332,3 +332,87 @@ def test_markdown_has_fees_section():
     assert "## Fees" in md
     assert "- **Domestic fee-paying:** 2026 $5,520" in md
     assert "- **Student contribution band (CSP):** 2" in md
+
+
+# --- Assumed Knowledge / Other Information ---
+
+def test_comp1100_assumed_knowledge():
+    data = parse_course(soup("course_COMP1100"), "COMP1100", "https://example.com")
+    # No formal requisite, but the page does state an expectation.
+    assert data["prerequisites"] == "None"
+    assert data["assumed_knowledge"].startswith("Students are assumed to have achieved a level of knowledge of mathematics")
+    assert data["other_information"] == ""
+
+
+def test_comp1730_assumed_knowledge_stops_at_the_next_heading():
+    data = parse_course(soup("course_COMP1730"), "COMP1730", "https://example.com")
+    paragraphs = data["assumed_knowledge"].split("\n\n")
+    assert len(paragraphs) == 2
+    assert paragraphs[1].startswith("No programming, Computer Science or IT experience")
+    assert "Areas of Interest" not in data["assumed_knowledge"]
+
+
+def test_comp1730_other_information_keeps_links_and_stays_in_its_tab():
+    data = parse_course(soup("course_COMP1730"), "COMP1730", "https://example.com")
+    other = data["other_information"]
+    assert other.startswith("[Course Webpage](https://comp.anu.edu.au/courses/comp1730/)")
+    # Last section of the Overview tab: must not run on into the Study tab.
+    assert "Indicative Assessment" not in other and "Turnitin" not in other
+
+
+def test_comp2300_course_without_assumed_knowledge():
+    data = parse_course(soup("course_COMP2300"), "COMP2300", "https://example.com")
+    assert data["assumed_knowledge"] == ""
+    assert data["other_information"] != ""
+    md = course_to_markdown(data, "2026-01-01T00:00:00")
+    assert "## Assumed Knowledge" not in md
+    assert "## Other Information" in md
+
+
+def test_other_information_carrying_a_school_prerequisite():
+    # MATH1013 has no Assumed Knowledge heading; the expectation is here instead.
+    html = """<div id="overview" class="tab-content">
+    <h2 id="other-information">Other Information</h2>
+    <p><strong>Secondary School Prerequisite: </strong>A satisfactory result in ACT Specialist Mathematics Major-Minor is recommended. See <a href="/2027/course/MATH1003">MATH1003</a>.</p>
+    </div><div id="study" class="tab-content"><h2 id="indicative-assessment">Indicative Assessment</h2></div>"""
+    data = parse_course(BeautifulSoup(html, "html.parser"), "MATH1013", "u")
+    assert data["assumed_knowledge"] == ""
+    assert data["other_information"] == (
+        "**Secondary School Prerequisite:** A satisfactory result in ACT Specialist Mathematics "
+        "Major-Minor is recommended. See [MATH1003](https://programsandcourses.anu.edu.au/2027/course/MATH1003).")
+
+
+def test_markdown_has_assumed_knowledge_section():
+    data = parse_course(soup("course_COMP1730"), "COMP1730", "https://example.com")
+    md = course_to_markdown(data, "2026-01-01T00:00:00")
+    assert "## Assumed Knowledge\n\nStudents are assumed" in md
+    assert md.index("## Learning Outcomes") < md.index("## Assumed Knowledge") < md.index("## Assessment")
+
+
+# --- Course convener (summary box) ---
+
+def test_comp1730_convener():
+    data = parse_course(soup("course_COMP1730"), "COMP1730", "https://example.com")
+    # The summary box is rendered twice; the name appears once.
+    assert data["convener"] == ["AsPr Minh Bui"]
+    assert "- **Convener:** AsPr Minh Bui" in course_to_markdown(data, "2026-01-01T00:00:00")
+
+
+def test_comp4350_no_convener_on_the_page():
+    data = parse_course(soup("course_COMP4350"), "COMP4350", "https://example.com")
+    assert data["convener"] == []
+    assert "**Convener:**" not in course_to_markdown(data, "2026-01-01T00:00:00")
+
+
+def test_several_conveners_are_separate_names():
+    html = """<ul><li class="degree-summary__code">
+    <span class="degree-summary__code-heading"><i class="fa fa-user"></i>Course convener</span>
+    <ul><li><span class="degree-summary__code-text">Dr Nisansala Yatapanage</span></li>
+        <li><span class="degree-summary__code-text">Dr Penny Kyburz</span></li></ul></li>
+    <li class="degree-summary__code">
+    <span class="degree-summary__code-heading">Mode of delivery</span>
+    <span class="degree-summary__code-text">In Person</span></li></ul>"""
+    data = parse_course(BeautifulSoup(html, "html.parser"), "COMP4820", "u")
+    assert data["convener"] == ["Dr Nisansala Yatapanage", "Dr Penny Kyburz"]
+    md = course_to_markdown(data, "2026-01-01T00:00:00")
+    assert "- **Convener:** Dr Nisansala Yatapanage, Dr Penny Kyburz" in md

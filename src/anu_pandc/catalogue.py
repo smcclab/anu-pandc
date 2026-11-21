@@ -49,13 +49,17 @@ def fetch_catalogue(prefix: str, year: str) -> list[dict]:
 
 def _tidy(item: dict) -> dict:
     # Older years (pre-2019) have null Name/Session/Units on some entries.
+    # A blank Session is kept blank: it means the search index lists no
+    # session, which is not the same as the course not running. The index can
+    # lag the course pages — in October 2026 it had no 2027 session for
+    # COMP1720 while the course page already listed a Second Semester class.
     units = item.get("Units")
     return {
         "code": item["CourseCode"],
         "title": (item.get("Name") or "").strip() or "(untitled)",
         "career": item.get("Career") or "",
         "units": f"{units:g}" if units is not None else "",
-        "sessions": item.get("Session") or "Not offered",
+        "sessions": (item.get("Session") or "").strip(),
         "raw": item,
     }
 
@@ -71,6 +75,9 @@ def catalogue_to_markdown(entries: list[dict], prefix: str, year: str, scraped_a
         f"- Source: {SEARCH_URL} (SearchText={prefix}, SelectedYear={year})",
         f"- Scraped at: {scraped_at}",
         f"- Courses: {len(entries)}",
+        "- A blank Sessions cell means the search index lists no session for the "
+        "course. It is not evidence the course is not offered: the index can lag "
+        "the course pages, whose \"Offered in\" table is the authority.",
         "",
         "| Code | Title | Career | Units | Sessions |",
         "|------|-------|--------|-------|----------|",
